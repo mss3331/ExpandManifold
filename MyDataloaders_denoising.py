@@ -61,6 +61,68 @@ def getDataloadersDic(dataset_info, dataloder_info):
     dataloader_dic = {'train': trainLoader, 'val': valLoader}
     return dataloader_dic
 
+class SegDatasetEnjectNoise(Dataset):
+    '''This dataset is designed only to train autoencoder by injecting niose and delete part of the images'''
+
+    def __init__(self, parentDir, dataset_name, imageDir, maskDir, targetSize, augmentation=None, load_to_RAM=False):
+        self.imageList = sorted(glob.glob("/".join((parentDir, dataset_name, imageDir, '/*'))), key=deleteTail)
+        self.maskList = sorted(glob.glob("/".join((parentDir, dataset_name, maskDir, '/*'))), key=deleteTail)
+
+        mismatch = identifyMismatch(self.imageList, self.maskList)
+        print('Number of mismatch for Data{} is {}'.format(dataset_name, mismatch))
+        assert(mismatch==0)
+        # At this stage we are sure that the mask corresponds to its mask
+        self.targetSize = targetSize
+        self.tensor_images = []
+        self.tensor_masks = []
+        self.load_to_RAM = load_to_RAM
+        self.augmentation = augmentation
+        if self.augmentation == None:
+            self.augmentation = transforms.Resize(self.targetSize)
+
+
+    def __getitem__(self, index):
+        x,x_noised = self.get_tensor_image(self.imageList[index])
+        y_dic = self.get_tensor_mask(self.maskList[index])
+        bitwise_mask = y_dic['seg_target']
+        single_mask = y_dic['seg_intermediate']
+        #singleMask is one channel image mask. y is two channels bitwise mask for cross entropy loss
+        return x, single_mask, bitwise_mask
+
+    def __len__(self):
+        return len(self.imageList)
+
+    def get_tensor_image(self, image_path, mask):
+        '''this function get image path and return transformed tensor image'''
+        preprocess = transforms.Compose([
+            # transforms.Resize((384, 288), 2),
+            transforms.Resize(self.targetSize),
+            self.augmentation,
+            transforms.ToTensor()])
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) ])
+        x = Image.open(image_path).convert('RGB')
+        x = preprocess(x)
+        noise = torch.randn_like(x)
+        x_noised = x+noise
+
+        polyp_scale = 3*torch.sum(mask)/(mask.nelement())
+        #the size of erasing area range between half and full polyp size
+        randomErase = transforms.RandomErasing(p=1,scale=(polyp_scale/2,polyp_scale))
+        x_noised_erased = randomErase(x_noised)
+        return x, x_noised_erased
+
+    def get_tensor_mask(self, mask_path):
+        trfresize = transforms.Resize(self.targetSize)
+        trftensor = transforms.ToTensor()
+        yimg = Image.open(mask_path).convert('L')
+        y1 = trftensor(trfresize(yimg))
+        mask = y1
+        y1 = y1.type(torch.BoolTensor)
+        y2 = torch.bitwise_not(y1)
+        y = torch.cat([y2, y1], dim=0).float()
+        mask_dic = {'seg_target': y, 'seg_intermediate': mask}
+        # y.squeeze_()
+        return mask_dic
 
 class SegDataset(Dataset):
     def __init__(self, parentDir, dataset_name, imageDir, maskDir, targetSize, augmentation=None, load_to_RAM=False):
