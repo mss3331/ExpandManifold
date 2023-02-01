@@ -7,14 +7,15 @@ import random
 import time
 import os
 import numpy as np
-from Plotting import plot, plot_test
+# from Plotting import plot, plot_test
 from torch.nn import functional as F
 from MyDataloaders import *
-from Metrics import *
+# from Metrics import *
 from models import MyModelV1, FCNModels, DeepLabModels, unet
 import torch
 from MyDataloaders_denoising import getLoadersBySetName
 from models.GenSeg_Models import *
+from models.unet_withoutskip import UNet as unet_withoutskip
 from torch import nn
 from Training import *
 from torchvision import datasets
@@ -105,6 +106,10 @@ def getModel(model_name):
                 model = GenSeg_IncludeAugX_gray_avgV2(Gen_Seg_arch)
     elif model_name.find('Vanilla') >= 0:
         model = GenSeg_Vanilla(Gen_Seg_arch,pretrained)
+    elif model_name.find('ExpandMani')>=0:
+        if model_name.find('unet_withoutskip')>=0:
+            #out channels is 5 (2 for mask and 3 for generated images)
+            model = unet_withoutskip(in_channels=3, out_channels=5,n_blocks=5,activation='relu',normalization='batch',conv_mode='same',dim=2)
 
     else:
         print('Model name unidentified')
@@ -244,10 +249,15 @@ if __name__ == '__main__':
     #                 Transfere Learning for vanilla models are added except for Unet
     #['GenSeg_Vanilla_none_unet', GenSeg_Vanilla_none_fcn, GenSeg_Vanilla_none_deeplab]
     #[GenSeg_Vanilla_TL_fcn, GenSeg_Vanilla_TL_deeplab, GenSeg_Vanilla_TL_lraspp]
-    model_name = "GenSeg_IncludeAugX_hue_avgV2_TL_unet_lraspp"
+    ################## Expand Manifold models ##########################
+        ############### Denosing-reconstruct auto encoder ############
+        #[ExpandMani_unet_withoutskip
+    model_name = "ExpandMani_unet_withoutskip"
     model = getModel(model_name)
     if model_name.find('GenSeg')>=0:
         switch_epoch=[-1,-1]
+    if model_name.find('ExpandMani') >= 0:
+        switch_epoch = [-1, -1]
     if model_name.find('Conventional')>=0 or model_name.find('Vanilla')>=0:
         #we don't have Generator here, hence, nothing to optimize
         lamda = {"l2": 0, "grad": 0}
@@ -289,7 +299,7 @@ if __name__ == '__main__':
 
     model = model.to(device)
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
-    loss_fn = {'generator':nn.MSELoss(reduction='sum'), # this is generator loss,
+    loss_fn = {'generator':nn.MSELoss(), # this is generator loss,
                'segmentor':nn.BCEWithLogitsLoss()}
 
     # call the training loop,
@@ -304,37 +314,10 @@ if __name__ == '__main__':
 
     start = time.time()
 
-    Dl_TOV_training_loop(num_epochs, optimizer, lamda, model, loss_fn,
+    ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_fn,
                   Dataloaders_dic, device, switch_epoch,colab_dir,
                          model_name)
 
-    ########################                 ########################
-    #    inference epoch using best generator and best segmentor
-    ########################                 ########################
-
-    print('\n',"====="*3,' inference time ',"====="*3,'\n','='*50)
-
-    # test an inference epoch given two checkpoints
-    if save_generator_checkpoints:
-        num_epochs = 0
-        lamda = {"l2": 1, "grad": 1}
-        checkpoint_segmentor = torch.load(
-            './denoising-using-deeplearning/checkpoints/highest_IOU_{}.pt'.format(model_name))
-        checkpoint_generator = torch.load(
-            './denoising-using-deeplearning/checkpoints/gen_highest_loss_{}.pt'.format(model_name))
-        state_dict = getStateDict(checkpoint_segmentor)
-        state_dict_gen = getStateDict(checkpoint_generator)
-        # modify the generator state dictionary
-        for i in state_dict_gen.keys():
-            # update only Generator
-            if i.find('Segmentor')>=0: break
-            state_dict[i] = state_dict_gen[i]
-        model.load_state_dict(state_dict)
-        Dataloaders_dic.pop('train')
-
-        Dl_TOV_training_loop(num_epochs, optimizer, lamda, model, loss_fn,
-                         Dataloaders_dic, device, switch_epoch, colab_dir,
-                         model_name, inference=True)
 
     wandb.save(colab_dir + '/*.py')
     wandb.save(colab_dir + '/results/*')

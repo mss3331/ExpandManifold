@@ -103,11 +103,12 @@ class SegDatasetEnjectNoise(Dataset):
         x = Image.open(image_path).convert('RGB')
         x = preprocess(x)
         noise = torch.randn_like(x)
-        x_noised = x+noise
+        alpha = 0.96+ 0.04*torch.rand(1) #original image from 0.96 to 1
+        x_noised = alpha * x + noise * (1 - alpha)
 
         polyp_scale = 3*torch.sum(mask)/(mask.nelement())
         #the size of erasing area range between half and full polyp size
-        randomErase = transforms.RandomErasing(p=1,scale=(polyp_scale/2,polyp_scale))
+        randomErase = transforms.RandomErasing(p=1,scale=(polyp_scale/16,polyp_scale/8))
         x_noised_erased = randomErase(x_noised)
         return x, x_noised_erased
 
@@ -252,85 +253,35 @@ def identifyMismatch(imageList, maskList, dataset_name="CVC-ClinicDB", examples=
             examples -= 1
     return mismatch
 
-def blure_background_getDataloadersDic(dataset_info, dataloder_info):
-    datasets_list = []
-    if not isinstance(dataset_info, list):
-        dataset_info = [dataset_info]
+if __name__=='__main__':
+    print('testing this script')
+    image_path = r'E:\Databases\CVC-ClinicDB\data_C1\images_C1\1.png'
+    mask_path = r'E:\Databases\CVC-ClinicDB\data_C1\mask_C1\1.png'
+    yimg = Image.open(mask_path).convert('L')
+    trfresize = transforms.Resize((200,300))
+    trftensor = transforms.ToTensor()
+    mask = trftensor(trfresize(yimg))
+    preprocess = transforms.Compose([
+        # transforms.Resize((384, 288), 2),
+        transforms.Resize((200,300)),
+        transforms.ToTensor()])
+    # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) ])
+    x = Image.open(image_path).convert('RGB')
+    x = preprocess(x)
+    for i in range(10):
+        noise = torch.randn_like(x)
+        alpha = 0.96+ 0.04*torch.rand(1)
 
-    for i, info in enumerate(dataset_info):
-        datasets_list.append(blure_background_SegDataset(*info))
+        x_noised = alpha*x + noise*(1-alpha)
 
-    dataset = ConcatDataset(datasets_list)
-    train_val_ratio, batchSize, shuffle = dataloder_info
-    trainDataset, valDataset = trainTestSplit(dataset, train_val_ratio)
-    # -------------Dataloader configurations---------------------
-    trainLoader = DataLoader(trainDataset, batch_size=batchSize, shuffle=shuffle, drop_last=False)
-    valLoader = DataLoader(valDataset, batch_size=batchSize, shuffle=shuffle, drop_last=False)
-    dataloader_dic = {'train': trainLoader, 'val': valLoader}
-    return dataloader_dic
+        polyp_scale = 3 * torch.sum(mask) / (mask.nelement())
+        # the size of erasing area range between half and full polyp size
+        randomErase = transforms.RandomErasing(p=1, scale=(polyp_scale / 16, polyp_scale/8))
+        x_noised_erased = randomErase(x_noised)
+        toPIL = transforms.ToPILImage()
+        import matplotlib.pyplot as plt
+        # plt.imshow(toPIL(x))
+        plt.imshow(toPIL(x_noised_erased))
+        # plt.imshow(toPIL(mask))
 
-class blure_background_SegDataset(Dataset):
-    def __init__(self, parentDir, dataset_name, imageDir, maskDir, targetSize, augmentation=None, load_to_RAM=False):
-        self.imageList = sorted(glob.glob("/".join((parentDir, dataset_name, imageDir, '/*'))), key=deleteTail)
-        self.maskList = sorted(glob.glob("/".join((parentDir, dataset_name, maskDir, '/*'))), key=deleteTail)
-
-        mismatch = identifyMismatch(self.imageList, self.maskList)
-        print('Number of mismatch for Data{} is {}'.format(dataset_name, mismatch))
-        assert(mismatch==0)
-        # At this stage we are sure that the mask corresponds to its mask
-        self.targetSize = targetSize
-        self.tensor_images = []
-        self.tensor_masks = []
-        self.load_to_RAM = load_to_RAM
-        self.augmentation = augmentation
-        if self.augmentation == None:
-            self.augmentation = transforms.Resize(self.targetSize)
-
-        if self.load_to_RAM:  # load all data to RAM for faster fetching
-            print("Loading dataset to RAM...")
-            self.tensor_images = [self.get_tensor_image(image_path) for image_path in self.imageList]
-            self.tensor_masks = [self.get_tensor_mask(mask_path) for mask_path in self.maskList]
-            print("Finish loading dataset to RAM")
-
-    def __getitem__(self, index):
-        if self.load_to_RAM:  # if images are loaded to the RAM copy them, otherwise, read them
-            x = self.tensor_images[index]
-            y_dic = self.tensor_masks[index]
-            y = y_dic['seg_target']
-            intermediate = y_dic['seg_intermediate']
-        else:
-            x = self.get_tensor_image(self.imageList[index])
-            y_dic = self.get_tensor_mask(self.maskList[index])
-            y = y_dic['seg_target']#mask as a boolean (for log loss)
-            intermediate = y_dic['seg_intermediate']#it is a mask as a float (for L2 loss)
-            x_blure = TF.gaussian_blur(x,11)
-            x = x_blure.mul(1-intermediate)+ x.mul(intermediate) #bluring the background and keeping the polyp
-        return x, intermediate, y
-
-    def __len__(self):
-        return len(self.imageList)
-
-    def get_tensor_image(self, image_path):
-        '''this function get image path and return transformed tensor image'''
-        preprocess = transforms.Compose([
-            # transforms.Resize((384, 288), 2),
-            transforms.Resize(self.targetSize),
-            self.augmentation,
-            transforms.ToTensor()])
-        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) ])
-        X = Image.open(image_path).convert('RGB')
-        X = preprocess(X)
-        return X
-
-    def get_tensor_mask(self, mask_path):
-        trfresize = transforms.Resize(self.targetSize)
-        trftensor = transforms.ToTensor()
-        yimg = Image.open(mask_path).convert('L')
-        y1 = trftensor(trfresize(yimg))
-        mask = y1
-        y1 = y1.type(torch.BoolTensor)
-        y2 = torch.bitwise_not(y1)
-        y = torch.cat([y2, y1], dim=0)
-        mask_dic = {'seg_target': y, 'seg_intermediate': mask}
-        # y.squeeze_()
-        return mask_dic
+        plt.show()

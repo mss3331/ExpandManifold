@@ -909,9 +909,10 @@ class UNet(nn.Module):
                 conv_mode=conv_mode,
             )
             self.up_convs.append(up_conv)
-
+        # I am expecting the out channel of this model to be 2 channels for mask and 3 channels for
+        # image reconstruction so the total is 5 channels
         self.conv_final = conv1(outs, self.out_channels, dim=dim)
-
+        self.sigmoid =nn.Sigmoid()
         self.apply(self.weight_init)
 
     @staticmethod
@@ -923,7 +924,7 @@ class UNet(nn.Module):
             if getattr(m, 'bias') is not None:
                 nn.init.constant_(m.bias, 0)
 
-    def forward(self, x):
+    def forward(self, x, phase, truth_masks):
         encoder_outs = []
 
         # Encoder pathway, save outputs for merging
@@ -946,11 +947,13 @@ class UNet(nn.Module):
             i += 1
 
         # No softmax is used, so you need to apply it in the loss.
+        # I am expecting the out channel of this model to be 2 channels for mask and 3 channels for
+        # image reconstruction so the total is 5 channels
         x = self.conv_final(x)
-        # Uncomment the following line to temporarily store output for
-        #  receptive field estimation using fornoxai/receptivefield:
-        # self.feature_maps = [x]  # Currently disabled to save memory
-        return x, latenZ
+        predicted_masks = x[:,:2,:,:]
+        generated_images = self.sigmoid(x[:,2:,:,:])
+        return generated_images, predicted_masks, truth_masks
+
 
     @torch.jit.unused
     def forward_gradcp(self, x):
@@ -1071,7 +1074,7 @@ if __name__ == '__main__':
                             conv_mode='same',
                             dim=2)
     # out_orig = model1(input)
-    out_withoutskip, _ = model2(input)
+    out_withoutskip, _ = model2(input,None,None)
     # print(out_orig.equal(out_withoutskip))
     print("without skip shape {}".format(out_withoutskip.shape))
     # test_model()
