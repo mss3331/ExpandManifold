@@ -154,6 +154,12 @@ def get_Dataloaders_dic(experimentDatasets):
                                                         batch_size=batch_size)
         Dataloaders_dic['test5'] = getLoadersBySetName('Kvasir-SEG', 'data_C5', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
+    elif  experimentDatasets=='CVC_ClinicDB_withoutTest':
+        # CVC train/val, Kvasir Test
+        train_val_ratio = 0.8
+        dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
+                                          shuffle=shuffle, batch_size=batch_size)
+        Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
     elif experimentDatasets in ['CVC_ClinicDB_Brightness','CVC_ClinicDB_Brightness20'
                                 ,'CVC_ClinicDB_flipping','CVC_ClinicDB_rotate'
                                 ,'CVC_ClinicDB_shear']:
@@ -249,6 +255,7 @@ if __name__ == '__main__':
     #                 Transfere Learning for vanilla models are added except for Unet
     #['GenSeg_Vanilla_none_unet', GenSeg_Vanilla_none_fcn, GenSeg_Vanilla_none_deeplab]
     #[GenSeg_Vanilla_TL_fcn, GenSeg_Vanilla_TL_deeplab, GenSeg_Vanilla_TL_lraspp]
+
     ################## Expand Manifold models ##########################
         ############### Denosing-reconstruct auto encoder ############
         #[ExpandMani_unet_withoutskip
@@ -263,8 +270,8 @@ if __name__ == '__main__':
         lamda = {"l2": 0, "grad": 0}
 
     # experimentDatasets = (CVC_EndoSceneStill (train/val/test), CVC_ClinicDB,Kvasir-SEG,
-    # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping )
-    experimentDatasets = 'CVC_ClinicDB_flipping'
+    # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping, CVC_ClinicDB_withoutTest )
+    experimentDatasets = 'CVC_ClinicDB_withoutTest'
 
     # Start WandB recording
     initializWandb()
@@ -281,7 +288,7 @@ if __name__ == '__main__':
     # Dataloaders_test_dic = getDataloadersDic(dataset_info, dataloder_info)
     # Dataloaders_dic['test']=Dataloaders_test_dic['val']
     #dataset_name = [Kvasir-SEG*5, CVC_ClinicDB*1 ,ETIS_Larib*1, EndoCV*5] 5= data_C1, data_C2 ... data_C5
-    #               CVC_EndoSceneStill
+    #               CVC_EndoSceneStill, CVC_ClinicDB_withoutTest
 
     Dataloaders_dic= get_Dataloaders_dic(experimentDatasets)
 
