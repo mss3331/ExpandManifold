@@ -28,7 +28,7 @@ wandb.login(key="38818beaffe50c5403d3f87b288d36d1b38372f8")
 # from prettytable import PrettyTable
 def initializWandb():
     transfer_learning = model_name.find('TL') >= 0
-    wandbproject_name = "denoising"
+    wandbproject_name = "ExpandingManifold"
     wandb.init(
         project=wandbproject_name,
         entity="mss3331",
@@ -194,7 +194,8 @@ def get_Dataloaders_dic(experimentDatasets):
 if __name__ == '__main__':
     '''This main is created to do side experiments'''
     repreducibility()
-    experiment_name=get('http://172.28.0.2:9000/api/sessions').json()[0]['name'].split('.')[0]
+    # experiment_name=get('http://172.28.0.2:9000/api/sessions').json()[0]['name'].split('.')[0]
+    experiment_name= None
     # if inference in the title of the experiment it means we want to do inference
     # true, we need to load weights, set epoch to 0 and delete the training set
     inference = experiment_name.find('inference') >= 0
