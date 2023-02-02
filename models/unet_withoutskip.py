@@ -937,7 +937,7 @@ class UNet(nn.Module):
         x,_ = self.squeezeChannels(x)
         batch_size = x.shape[0]
         latenZ = x.view(batch_size,-1)
-        print("latent vector shape is", latenZ.shape)
+        # print("latent vector shape is", latenZ.shape)
         # Decoding by UpConv and merging with saved outputs of encoder
         x,_ = self.unsqueezChannels(x)
         i = 0

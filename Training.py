@@ -154,6 +154,9 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                     if model_name.find('GenSeg') >= 0:
                         results = model(X, phase, original_masks)
                         generated_images, generated_masks, original_masks = results
+                    elif model_name.find('ExpandMani') >= 0:
+                        results = model(X, phase, original_masks)
+                        generated_images, generated_masks, original_masks = results
                     else:  # the old version code i.e., other than GenSeg_IncludeX models
                         generated_images = model[0](X)
                         generated_X = generated_images.clone().detach()
@@ -217,11 +220,9 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                 pbar.set_postfix({phase + ' Epoch': str(epoch) + "/" + str(num_epochs - 1),
                                   'polypIOU': iou_batches.mean(),
                                   'best_val_iou': best_iou['val'],
-                                  'best_test_iou': best_iou['test1'],
                                   'mIOU': np.mean((iou_batches+iou_background_batches)/2),
                                   'Loss': np.mean(loss_batches),
                                   'L2': np.mean(loss_l2_batches),
-                                  'grad': np.mean(loss_grad_batches),
                                   'BCE_loss': np.mean(loss_mask_batches),
                                   'original_images_grad': np.mean(original_images_grad),
                                   })

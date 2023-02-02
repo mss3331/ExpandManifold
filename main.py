@@ -157,7 +157,7 @@ def get_Dataloaders_dic(experimentDatasets):
     elif  experimentDatasets=='CVC_ClinicDB_withoutTest':
         # CVC train/val, Kvasir Test
         train_val_ratio = 0.8
-        dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
+        dataloasers = getLoadersBySetName('CVC-ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
                                           shuffle=shuffle, batch_size=batch_size)
         Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
     elif experimentDatasets in ['CVC_ClinicDB_Brightness','CVC_ClinicDB_Brightness20'
