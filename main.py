@@ -218,7 +218,7 @@ if __name__ == '__main__':
     num_epochs = 300
     batch_size = 7
     shuffle = False
-    lamda = {"l2":10,"grad":10} #L2 and Grad
+    lamda = {"l2":100,"grad":10} #L2 and Grad
 
     # ************** modify for full experiment *************
     # load_to_RAM = True

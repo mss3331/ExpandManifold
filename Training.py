@@ -169,7 +169,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
 
 
                     #reconstruction loss |f-g| "MSELoss
-                    loss_l2 = loss_fn_sum(generated_images, X)
+                    loss_l2 = loss_fn_sum(generated_images, X) * lamda['l2']
                     # gradients = color_gradient(generated_images, 'No reduction', model_name)
                     # gradients_masked = torch.mul(gradients, 1 - intermediate)  # consider only background
                     # loss_grad = torch.sum(torch.pow(gradients_masked, 2)) / torch.sum(1 - intermediate)
@@ -180,7 +180,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                     if epoch >= switch_epoch[1]:  # move to stage 3 loss: ‖f-g * mask(polyp)‖^2 + ‖∇g *mask(1-polyp)‖^2 + BCEWithLoggits
                         bce = loss_dic['segmentor']
                         loss_mask = bce(generated_masks, original_masks)
-                        loss = loss_l2 * lamda['l2']+ loss_mask
+                        loss = loss_l2 + loss_mask
 
                         # iou = IOU_class01(original_masks, generated_masks)
                         # iou is numpy array for each image
