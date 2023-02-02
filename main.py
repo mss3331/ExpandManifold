@@ -214,11 +214,11 @@ if __name__ == '__main__':
     colab_dir = "."
     if run_in_colab:
         root_dir = "/content/CVC-ClinicDB"
-        colab_dir = "/content/denoising-using-deeplearning"
+        colab_dir = "/content/ExpandManifold"
     num_epochs = 300
     batch_size = 7
     shuffle = False
-    lamda = {"l2":1,"grad":10} #L2 and Grad
+    lamda = {"l2":10,"grad":10} #L2 and Grad
 
     # ************** modify for full experiment *************
     # load_to_RAM = True
