@@ -241,8 +241,8 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                     if phase=='val':
                         print('better validation loss- saving checkpoint')
                         saving_checkpoint(epoch, model, optimizer,
-                                          generator_loss, generator_loss,
-                                          generator_loss, generator_loss,
+                                          best_loss[phase], 0,
+                                          0, 0,
                                           colab_dir, model_name)
                 if phase=='val' :
                     # if the generator is getting better save a checkpoint for the generator

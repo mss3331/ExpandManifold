@@ -216,7 +216,7 @@ if __name__ == '__main__':
         root_dir = "/content/CVC-ClinicDB"
         colab_dir = "/content/ExpandManifold"
     num_epochs = 300
-    batch_size = 7
+    batch_size = 14
     shuffle = False
     lamda = {"l2":100,"grad":10} #L2 and Grad
 
