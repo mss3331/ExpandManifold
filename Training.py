@@ -239,7 +239,11 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                     wandb.run.summary["best_{}_loss".format(phase)] = np.mean(loss_batches)
                     best_loss[phase] = np.mean(loss_batches)
                     if phase=='val':
-                        print('better validation loss')
+                        print('better validation loss- saving checkpoint')
+                        saving_checkpoint(epoch, model, optimizer,
+                                          generator_loss, generator_loss,
+                                          generator_loss, generator_loss,
+                                          colab_dir, model_name)
                 if phase=='val' :
                     # if the generator is getting better save a checkpoint for the generator
                     generator_loss = np.mean(loss_l2_batches) + np.mean(loss_grad_batches)
@@ -250,7 +254,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         saving_checkpoint(epoch, model, optimizer,
                                           generator_loss, generator_loss,
                                           generator_loss, generator_loss,
-                                          colab_dir, model_name, save_generator_checkpoints=True)
+                                          colab_dir, model_name)
                         best_val_generator_loss = generator_loss
                         
                     #if Polyp mean is getting better

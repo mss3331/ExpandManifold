@@ -934,12 +934,12 @@ class UNet(nn.Module):
             encoder_outs.append(before_pool)
             i += 1
         #this is last encoder the latent variable
-        x,_ = self.squeezeChannels(x)
+        # x,_ = self.squeezeChannels(x)
         batch_size = x.shape[0]
         latenZ = x.view(batch_size,-1)
         # print("latent vector shape is", latenZ.shape)
         # Decoding by UpConv and merging with saved outputs of encoder
-        x,_ = self.unsqueezChannels(x)
+        # x,_ = self.unsqueezChannels(x)
         i = 0
         for module in self.up_convs:
             before_pool = encoder_outs[-(i+2)]
