@@ -141,6 +141,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
 
             pbar = tqdm(data_loader_dic[phase], total=len(data_loader_dic[phase]))
             for X, intermediate, original_masks in pbar:
+                z_vectors = None
                 batch_size = len(X)
                 total_train_images += batch_size
 
@@ -156,7 +157,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         generated_images, generated_masks, original_masks = results
                     elif model_name.find('ExpandMani') >= 0:
                         results = model(X, phase, original_masks)
-                        generated_images, generated_masks, original_masks = results
+                        generated_images, generated_masks, original_masks, z_vectors = results
                     else:  # the old version code i.e., other than GenSeg_IncludeX models
                         generated_images = model[0](X)
                         generated_X = generated_images.clone().detach()

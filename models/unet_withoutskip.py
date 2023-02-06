@@ -924,20 +924,34 @@ class UNet(nn.Module):
             if getattr(m, 'bias') is not None:
                 nn.init.constant_(m.bias, 0)
 
-    def forward(self, x, phase, truth_masks):
+    def forward(self, x, phase, truth_masks,rate= None, z_vectors=None):
+        ''' if z_vectors is not empty it means we need to generate:
+         z_prime = (1-rate)*z_vectors + rate*z_vectorsShifted '''
         encoder_outs = []
+        z_prime = None
+        #if z_vectors is given, it means we want only to generate new images out of z_prime
+        z_prime = None
+        if z_vectors is not None:
+            assert rate is not None
+            z_vectors_shifted = torch.roll(z_vectors,shifts=1,dims=0)
+            z_prime = (1-rate)*z_vectors + rate*z_vectors_shifted
+            x = z_prime
+        else:#if we don't have z_vectors, it means we want to train the AE or generate z_vectors online
+            # Encoder pathway, save outputs for merging
+            i = 0  # Can't enumerate because of https://github.com/pytorch/pytorch/issues/16123
+            for module in self.down_convs:
+                x, before_pool = module(x)
+                encoder_outs.append(before_pool)
+                i += 1
+            #this is last encoder the latent variable
+            # x,_ = self.squeezeChannels(x)
+            # batch_size = x.shape[0]
+            # latenZ = x.view(batch_size,-1)
+            z_vectors = x
+            # print("latent vector shape is", latenZ.shape)
 
-        # Encoder pathway, save outputs for merging
-        i = 0  # Can't enumerate because of https://github.com/pytorch/pytorch/issues/16123
-        for module in self.down_convs:
-            x, before_pool = module(x)
-            encoder_outs.append(before_pool)
-            i += 1
-        #this is last encoder the latent variable
-        # x,_ = self.squeezeChannels(x)
-        batch_size = x.shape[0]
-        latenZ = x.view(batch_size,-1)
-        # print("latent vector shape is", latenZ.shape)
+        # ------------------   Decoder part  --------------------#
+
         # Decoding by UpConv and merging with saved outputs of encoder
         # x,_ = self.unsqueezChannels(x)
         i = 0
@@ -952,7 +966,7 @@ class UNet(nn.Module):
         x = self.conv_final(x)
         predicted_masks = x[:,:2,:,:]
         generated_images = self.sigmoid(x[:,2:,:,:])
-        return generated_images, predicted_masks, truth_masks
+        return generated_images, predicted_masks, truth_masks, z_vectors
 
 
     @torch.jit.unused
