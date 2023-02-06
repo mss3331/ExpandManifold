@@ -19,7 +19,7 @@ def getStateDict(checkpoint):
         print(key,":",value)
     return checkpoint['state_dict']
 def loadCheckPoint(model_name, freez=True):
-    checkpoint = torch.load('./ExpandManifold/checkpoints/highest_IOU_{}.pt'.format(model_name))
+    checkpoint = torch.load('./ExpandManifold/checkpoints/highest_IOU_ExpandMani_{}.pt'.format(model_name))
     state_dict = getStateDict(checkpoint)
     generator = getModel(model_name)
     generator.load_state_dict(state_dict)
