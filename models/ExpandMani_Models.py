@@ -1,6 +1,6 @@
 from torch import nn
 import torch
-from main import getModel
+from models.GetModel import getModel
 
 def catOrSplit(tensor_s, chunks=2):
     if isinstance(tensor_s,list):#if list, means we need to concat
