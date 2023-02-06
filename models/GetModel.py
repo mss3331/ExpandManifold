@@ -2,7 +2,7 @@ from models.GenSeg_Models import *
 from models.unet_withoutskip import UNet as unet_withoutskip
 from models.ExpandMani_Models import ExpandMani_AE
 
-def getModel(model_name):
+def getModelFrameWork(model_name):
     # identify which models for Gen Seg
     Gen_Seg_arch = model_name.split('_')[-2:]
     pretrained = model_name.find('TL') >= 0

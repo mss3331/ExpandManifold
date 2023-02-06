@@ -1,6 +1,7 @@
 from torch import nn
 import torch
-from models.GetModel import getModel
+from models.GetModel import getModelFrameWork
+from models.GetModel import getModel as getSegmentor
 
 def catOrSplit(tensor_s, chunks=2):
     if isinstance(tensor_s,list):#if list, means we need to concat
@@ -19,9 +20,10 @@ def getStateDict(checkpoint):
         print(key,":",value)
     return checkpoint['state_dict']
 def loadCheckPoint(model_name, freez=True):
-    checkpoint = torch.load('./ExpandManifold/checkpoints/highest_IOU_ExpandMani_{}.pt'.format(model_name))
+    model_name = 'ExpandMani_'+model_name #unitwithoutskip ==> ExpandMani_unetwithoutskip
+    checkpoint = torch.load('./ExpandManifold/checkpoints/highest_IOU_{}.pt'.format(model_name))
     state_dict = getStateDict(checkpoint)
-    generator = getModel(model_name)
+    generator = getModelFrameWork(model_name)
     generator.load_state_dict(state_dict)
     if freez:
         set_parameter_requires_grad(generator)
@@ -33,7 +35,7 @@ class ExpandMani_AE(nn.Module):
     def __init__(self, Gen_Seg_arch, input=3, out = 2):
         super().__init__()
         self.generator_model = loadCheckPoint(Gen_Seg_arch[0])
-        self.segmentor_model = getModel(Gen_Seg_arch[1])
+        self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
 
     def forward(self, x, phase, truth_masks, rate, z_vectors=None):
         '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires

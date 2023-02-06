@@ -206,9 +206,9 @@ if __name__ == '__main__':
         #[ExpandMani_unetwithoutskip
 
         ############## proposed Sgementation framework  ###############
-        #[ExpandMani_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
-        # ExpandMani_unetwithoutskip_deeplab, ExpandMani_unetwithoutskip_lraspp
-    model_name = "ExpandMani_unetwithoutskip_lraspp"
+        #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
+        # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
+    model_name = "ExpandMani_Seg_unetwithoutskip_lraspp"
     model = getModel(model_name)
     if model_name.find('GenSeg')>=0:
         switch_epoch=[-1,-1]
