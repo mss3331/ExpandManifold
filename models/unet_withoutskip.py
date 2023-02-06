@@ -924,7 +924,7 @@ class UNet(nn.Module):
             if getattr(m, 'bias') is not None:
                 nn.init.constant_(m.bias, 0)
 
-    def forward(self, x, phase, truth_masks,rate= None, z_vectors=None):
+    def forward(self, x, phase, truth_masks,rate= None, z_vectors=None, returnZ= False):
         ''' if z_vectors is not empty it means we need to generate:
          z_prime = (1-rate)*z_vectors + rate*z_vectorsShifted '''
         encoder_outs = []
@@ -966,7 +966,10 @@ class UNet(nn.Module):
         x = self.conv_final(x)
         predicted_masks = x[:,:2,:,:]
         generated_images = self.sigmoid(x[:,2:,:,:])
-        return generated_images, predicted_masks, truth_masks, z_vectors
+        if returnZ:# we need to retrieve z vectors only for segmentation stage to generate z_prime
+            return generated_images, predicted_masks, truth_masks, z_vectors
+        else:# this is for training the AE, hence, no need for z_vectors. Otherwise, it will break Training.py
+            return generated_images, predicted_masks, truth_masks
 
 
     @torch.jit.unused

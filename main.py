@@ -16,6 +16,7 @@ import torch
 from MyDataloaders_denoising import getLoadersBySetName
 from models.GenSeg_Models import *
 from models.unet_withoutskip import UNet as unet_withoutskip
+from models.ExpandMani_Models import ExpandMani_AE
 from torch import nn
 from Training import *
 from torchvision import datasets
@@ -107,9 +108,12 @@ def getModel(model_name):
     elif model_name.find('Vanilla') >= 0:
         model = GenSeg_Vanilla(Gen_Seg_arch,pretrained)
     elif model_name.find('ExpandMani')>=0:
-        if model_name.find('unet_withoutskip')>=0:
+        if model_name.find('ExpandMani_unetwithoutskip')>=0:
             #out channels is 5 (2 for mask and 3 for generated images)
             model = unet_withoutskip(in_channels=3, out_channels=5,n_blocks=5,activation='relu',normalization='batch',conv_mode='same',dim=2)
+        else:
+            model = ExpandMani_AE(Gen_Seg_arch)
+
 
     else:
         print('Model name unidentified')
@@ -200,8 +204,8 @@ if __name__ == '__main__':
     # true, we need to load weights, set epoch to 0 and delete the training set
     inference = experiment_name.find('inference') >= 0
     learning_rate = 0.01
-    input_channels = 3
-    number_classes = 3  # output channels should be one mask for binary class
+
+
     switch_epoch = [50,150] # when to switch to the next training stage?
     # If true, it means I wanted to save the best generator parameters as well as the best segmentor parameters.
     save_generator_checkpoints = False
@@ -259,8 +263,12 @@ if __name__ == '__main__':
 
     ################## Expand Manifold models ##########################
         ############### Denosing-reconstruct auto encoder ############
-        #[ExpandMani_unet_withoutskip
-    model_name = "ExpandMani_unet_withoutskip"
+        #[ExpandMani_unetwithoutskip
+
+        ############## proposed Sgementation framework  ###############
+        #[ExpandMani_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
+        # ExpandMani_unetwithoutskip_deeplab, ExpandMani_unetwithoutskip_lraspp
+    model_name = "ExpandMani_unetwithoutskip_lraspp"
     model = getModel(model_name)
     if model_name.find('GenSeg')>=0:
         switch_epoch=[-1,-1]
@@ -315,7 +323,7 @@ if __name__ == '__main__':
     if inference:
         num_epochs=0
         lamda = {"l2":1,"grad":1}
-        checkpoint = torch.load('./denoising-using-deeplearning/checkpoints/highest_IOU_{}.pt'.format(model_name))
+        checkpoint = torch.load('./ExpandManifold/checkpoints/highest_IOU_{}.pt'.format(model_name))
         state_dict = getStateDict(checkpoint)
         model.load_state_dict(state_dict)
         Dataloaders_dic.pop('train')
