@@ -12,7 +12,7 @@ from torch.nn import functional as F
 from MyDataloaders import *
 # from Metrics import *
 from models import MyModelV1, FCNModels, DeepLabModels, unet
-from models.GetModel import getModel
+from models.GetModel import getModelFrameWork
 import torch
 from MyDataloaders_denoising import getLoadersBySetName
 
@@ -209,7 +209,7 @@ if __name__ == '__main__':
         #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
         # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
     model_name = "ExpandMani_Seg_unetwithoutskip_lraspp"
-    model = getModel(model_name)
+    model = getModelFrameWork(model_name)
     if model_name.find('GenSeg')>=0:
         switch_epoch=[-1,-1]
     if model_name.find('ExpandMani') >= 0:

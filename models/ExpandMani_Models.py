@@ -1,7 +1,7 @@
 from torch import nn
+from models import MyModelV1, FCNModels, DeepLabModels, unet
+from models.unet_withoutskip import UNet as unet_withoutskip
 import torch
-from models.GetModel import getModelFrameWork
-from models.GetModel import getModel as getSegmentor
 
 def catOrSplit(tensor_s, chunks=2):
     if isinstance(tensor_s,list):#if list, means we need to concat
@@ -23,7 +23,7 @@ def loadCheckPoint(model_name, freez=True):
     model_name = 'ExpandMani_'+model_name #unitwithoutskip ==> ExpandMani_unetwithoutskip
     checkpoint = torch.load('./ExpandManifold/checkpoints/highest_IOU_{}.pt'.format(model_name))
     state_dict = getStateDict(checkpoint)
-    generator = getModelFrameWork(model_name)
+    generator = getGenerator(model_name)
     generator.load_state_dict(state_dict)
     if freez:
         set_parameter_requires_grad(generator)
@@ -66,3 +66,39 @@ class ExpandMani_AE(nn.Module):
         and the orignial masks
         '''
         return generated_images, predicted_masks, truth_masks
+
+
+
+
+
+
+
+
+def getSegmentor(model_name='unet',pretrianed=False, in_channels=3, out_channels=2,):
+    if not isinstance(model_name,str):
+        return model_name #it means that model_name=torchvision.transforms.Augmentation or nn.Identity or something else
+    if model_name=='deeplab':
+        model = DeepLabModels.Deeplabv3(num_classes=out_channels, pretrianed=pretrianed)
+    elif model_name == 'fcn':
+        model = FCNModels.FCN(num_classes=out_channels, pretrianed=pretrianed)
+    elif model_name == 'lraspp':
+        model = DeepLabModels.Lraspp(num_classes=out_channels, pretrianed=pretrianed)
+    elif model_name == 'unet':
+        model = unet.UNet(in_channels=in_channels,
+              out_channels=out_channels,
+              n_blocks=4,
+              activation='relu',
+              normalization='batch',
+              conv_mode='same',
+              dim=2)
+    else:
+        print('unknnown model for the Gen Seg models')
+        exit(-1)
+
+    return model
+
+def getGenerator(model_name):
+    if model_name.find('ExpandMani_unetwithoutskip') >= 0:
+        # out channels is 5 (2 for mask and 3 for generated images)
+        model = unet_withoutskip(in_channels=3, out_channels=5, n_blocks=5, activation='relu', normalization='batch',
+                                 conv_mode='same', dim=2)
