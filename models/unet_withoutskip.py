@@ -930,26 +930,31 @@ class UNet(nn.Module):
         encoder_outs = []
         z_prime = None
         #if z_vectors is given, it means we want only to generate new images out of z_prime
-        z_prime = None
+
+
+        # Encoder pathway, save outputs for merging
+        i = 0  # Can't enumerate because of https://github.com/pytorch/pytorch/issues/16123
+        for module in self.down_convs:
+            x, before_pool = module(x)
+            encoder_outs.append(before_pool)
+            i += 1
+        #this is last encoder the latent variable
+        # x,_ = self.squeezeChannels(x)
+        # batch_size = x.shape[0]
+        # latenZ = x.view(batch_size,-1)
+
+        # print("latent vector shape is", latenZ.shape)
         if z_vectors is not None:
             assert rate is not None
-            z_vectors_shifted = torch.roll(z_vectors,shifts=1,dims=0)
-            z_prime = (1-rate)*z_vectors + rate*z_vectors_shifted
+            z_vectors_shifted = torch.roll(z_vectors, shifts=1, dims=0)
+            z_prime = (1 - rate) * z_vectors + rate * z_vectors_shifted
             x = z_prime
-            print('z_vectors={}, and z_prime {}'.format(z_vectors[:3,1,1,1],z_prime[:3,1,1,1]))
-        else:#if we don't have z_vectors, it means we want to train the AE or generate z_vectors online
-            # Encoder pathway, save outputs for merging
-            i = 0  # Can't enumerate because of https://github.com/pytorch/pytorch/issues/16123
-            for module in self.down_convs:
-                x, before_pool = module(x)
-                encoder_outs.append(before_pool)
-                i += 1
-            #this is last encoder the latent variable
-            # x,_ = self.squeezeChannels(x)
-            # batch_size = x.shape[0]
-            # latenZ = x.view(batch_size,-1)
+            print(
+                'z_vectors={}, and z_prime {} the rate is {}'.format(z_vectors[:3, 1, 1, :10], z_prime[:3, 1, 1, :101],
+                                                                     rate))
+        # if we don't have z_vectors, it means we want to train the AE or generate z_vectors online
+        else:
             z_vectors = x
-            # print("latent vector shape is", latenZ.shape)
 
         # ------------------   Decoder part  --------------------#
 
