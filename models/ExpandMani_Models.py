@@ -98,7 +98,9 @@ def getSegmentor(model_name='unet',pretrianed=False, in_channels=3, out_channels
     return model
 
 def getGenerator(model_name):
+    model = None
     if model_name.find('ExpandMani_unetwithoutskip') >= 0:
         # out channels is 5 (2 for mask and 3 for generated images)
         model = unet_withoutskip(in_channels=3, out_channels=5, n_blocks=5, activation='relu', normalization='batch',
                                  conv_mode='same', dim=2)
+    return model
