@@ -5,9 +5,9 @@ import torch
 #from torch.nn import functional as F
 def createTruthMask(unormalized_2channels_mask):
     '''The input here is real number, we want to convert it to [0,1] '''
-    _, polyp = torch.max(unormalized_2channels_mask, dim=1)
+    _, polyp = torch.max(unormalized_2channels_mask, dim=1, keepdim=True)
     background = 1-polyp
-    normalized_mask = torch.cat([background, polyp], dim=0)
+    normalized_mask = torch.cat([background, polyp], dim=1)
     return normalized_mask
 def catOrSplit(tensor_s, chunks=2):
     if isinstance(tensor_s,list):#if list, means we need to concat
