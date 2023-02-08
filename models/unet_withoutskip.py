@@ -970,6 +970,8 @@ class UNet(nn.Module):
         # I am expecting the out channel of this model to be 2 channels for mask and 3 channels for
         # image reconstruction so the total is 5 channels
         x = self.conv_final(x)
+        #predicted_masks would used as truth mask in the second phase, hence, it sould be between
+        #(0,1)
         predicted_masks = x[:,:2,:,:]
         generated_images = self.sigmoid(x[:,2:,:,:])
         if returnZ:# we need to retrieve z vectors only for segmentation stage to generate z_prime

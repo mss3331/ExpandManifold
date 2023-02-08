@@ -2,7 +2,13 @@ from torch import nn
 from models import MyModelV1, FCNModels, DeepLabModels, unet
 from models.unet_withoutskip import UNet as unet_withoutskip
 import torch
-
+#from torch.nn import functional as F
+def createTruthMask(unormalized_2channels_mask):
+    '''The input here is real number, we want to convert it to [0,1] '''
+    _, polyp = torch.max(unormalized_2channels_mask, dim=1)
+    background = 1-polyp
+    normalized_mask = torch.cat([background, polyp], dim=0)
+    return normalized_mask
 def catOrSplit(tensor_s, chunks=2):
     if isinstance(tensor_s,list):#if list, means we need to concat
         return torch.cat(tensor_s,dim=0)
@@ -50,11 +56,14 @@ class ExpandMani_AE(nn.Module):
             # The generator will generate images according to z_prime (calculated internally according to rate)
             generator_result = self.generator_model(x, phase, truth_masks, rate=rate, z_vectors= z_vectors)
             generated_images, generated_masks, truth_masks = generator_result
+            #Here the generated_masks should have the either 0 or 1 so that BCE make sense ylog(y) + (1-y)log(1-y)
+            generated_masks = createTruthMask(generated_masks)
 
 
         if phase=='train':
             '''if train then training input is increased 
-             original images (x) + generated images along with corresponding masks'''
+             original images (x) + generated images along with corresponding masks
+             '''
             x = catOrSplit([generated_images, x])
             truth_masks = catOrSplit([generated_masks, truth_masks])
 

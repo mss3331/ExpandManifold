@@ -156,7 +156,10 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         results = model(X, phase, original_masks)
                         generated_images, generated_masks, original_masks = results
                     elif model_name.find('ExpandMani') >= 0:
-                        results = model(X, phase, original_masks, rate = epoch*10/num_epochs)
+                        rate = epoch * 2 / num_epochs
+                        if rate > 1:
+                            rate = 1 - rate % 1
+                        results = model(X, phase, original_masks, rate = rate)
                         generated_images, generated_masks, original_masks = results
                     else:  # the old version code i.e., other than GenSeg_IncludeX models
                         generated_images = model[0](X)
