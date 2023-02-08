@@ -949,9 +949,9 @@ class UNet(nn.Module):
             z_vectors_shifted = torch.roll(z_vectors, shifts=1, dims=0)
             z_prime = (1 - rate) * z_vectors + rate * z_vectors_shifted
             x = z_prime
-            print(
-                'z_vectors={}, and z_prime {} the rate is {}'.format(z_vectors[:3, 1, 1, :10], z_prime[:3, 1, 1, :101],
-                                                                     rate))
+            # print(
+            #     'z_vectors={}, and z_prime {} the rate is {}'.format(z_vectors[:3, 1, 1, :10], z_prime[:3, 1, 1, :101],
+            #                                                          rate))
         # if we don't have z_vectors, it means we want to train the AE or generate z_vectors online
         else:
             z_vectors = x

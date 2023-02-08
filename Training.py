@@ -208,7 +208,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         optimizer.step()
                 if flag:  # this flag
                     flag = False
-                    true_mask = intermediate
+                    _, true_mask = original_masks.max(dim=1, keepdim=True)
                     if epoch >= switch_epoch[1]:#stage 3
                         max, generated_mask = generated_masks.max(dim=1)
                         generated_mask = generated_mask.unsqueeze(dim=1)
