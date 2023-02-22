@@ -8,7 +8,8 @@ from torchvision import transforms
 import torchvision.transforms.functional as TF
 import collections
 
-def getLoadersBySetName(dataset_name, data_C,target_img_size, train_val_ratio=0,batch_size=7,shuffle=False,):
+def getLoadersBySetName(dataset_name, data_C,target_img_size,
+                        train_val_ratio=0,batch_size=7,shuffle=False, randomSplit= False):
     #input should be dataset_name="CVC-ClinicDB",  data_C="data_C1", split_ratio=0.5
     #output dataloader1 OR dataloader1, dataloader2 if split_ratio != 0 (i.e., we want train/val dataloaders)
     # databases = {'EndoCV': "/content/trainData_EndoCV2021_5_Feb2021",
@@ -34,7 +35,7 @@ def getLoadersBySetName(dataset_name, data_C,target_img_size, train_val_ratio=0,
                              child_dir, imageDir, maskDir, target_img_size))
 
     dataloder_info = (train_val_ratio, batch_size, shuffle)
-    Dataloaders_dic = getDataloadersDic(dataset_info, dataloder_info)
+    Dataloaders_dic = getDataloadersDic(dataset_info, dataloder_info, randomSplit)
 
     dataloader1 = Dataloaders_dic['train']
     dataloader2 = Dataloaders_dic['val']
@@ -44,7 +45,7 @@ def getLoadersBySetName(dataset_name, data_C,target_img_size, train_val_ratio=0,
     return dataloader1, dataloader2
 
 
-def getDataloadersDic(dataset_info, dataloder_info):
+def getDataloadersDic(dataset_info, dataloder_info, randomSplit):
     datasets_list = []
     if not isinstance(dataset_info, list):
         dataset_info = [dataset_info]
@@ -54,7 +55,7 @@ def getDataloadersDic(dataset_info, dataloder_info):
 
     dataset = ConcatDataset(datasets_list)
     train_val_ratio, batchSize, shuffle = dataloder_info
-    trainDataset, valDataset = trainTestSplit(dataset, train_val_ratio)
+    trainDataset, valDataset = trainTestSplit(dataset, train_val_ratio, randomSplit)
     # -------------Dataloader configurations---------------------
     trainLoader = DataLoader(trainDataset, batch_size=batchSize, shuffle=shuffle, drop_last=False)
     valLoader = DataLoader(valDataset, batch_size=batchSize, shuffle=shuffle, drop_last=False)
@@ -191,13 +192,19 @@ class SegDataset(Dataset):
 
 
 # TTR is Train Test Ratio
-def trainTestSplit(dataset, TTR):
+def trainTestSplit(dataset, TTR,randomSplit):
     '''This function split train test randomely'''
     if not isinstance(dataset, collections.Sequence):
         dataset = (dataset, dataset)
-    print("dataset is splitted randomely")
-    dataset_size = len(dataset[0])  # dataset is tuble = (megaDataset_augmented, megaDataset_no_augmented)
-    dataset_permutation = np.random.permutation(dataset_size)
+    if randomSplit:
+        print("dataset is splitted randomely")
+        dataset_size = len(dataset[0])  # dataset is tuble = (megaDataset_augmented, megaDataset_no_augmented)
+        dataset_permutation = np.random.permutation(dataset_size)
+    else:
+        print("dataset is splitted NOT randomely")
+        dataset_size = len(dataset[0])  # dataset is tuble = (megaDataset_augmented, megaDataset_no_augmented)
+        dataset_permutation = np.arange(start=0, stop=dataset_size, step=1, dtype=np.int)
+
     # print(dataset_permutation[:10])
     # trainDataset = torch.utils.data.Subset(dataset, range(0, int(TTR * len(dataset))))
     # valDataset = torch.utils.data.Subset(dataset, range(int(TTR*len(dataset)), len(dataset)))

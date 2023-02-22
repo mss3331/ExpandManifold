@@ -100,7 +100,7 @@ def get_Dataloaders_dic(experimentDatasets):
                                                         batch_size=batch_size)
     elif  experimentDatasets=='CVC_ClinicDB_withoutTest':
         # CVC train/val, Kvasir Test
-        train_val_ratio = 0.8
+        train_val_ratio = 0.6
         dataloasers = getLoadersBySetName('CVC-ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
                                           shuffle=shuffle, batch_size=batch_size)
         Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
@@ -203,12 +203,12 @@ if __name__ == '__main__':
 
     ################## Expand Manifold models ##########################
         ############### Denosing-reconstruct auto encoder ############
-        #[ExpandMani_unetwithoutskip
+        #[ExpandMani_unetsqueezed, ExpandMani_unetwithoutskip
 
         ############## proposed Sgementation framework  ###############
         #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
         # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
-    model_name = "ExpandMani_Seg_unetwithoutskip_lraspp"
+    model_name = "ExpandMani_unetsqueezed"
     model = getModelFrameWork(model_name)
     if model_name.find('GenSeg')>=0:
         switch_epoch=[-1,-1]
@@ -216,7 +216,7 @@ if __name__ == '__main__':
         switch_epoch = [-1, -1]
     if model_name.find('Conventional')>=0 or model_name.find('Vanilla')>=0:
         #we don't have Generator here, hence, nothing to optimize
-        lamda = {"l2": 0, "grad": 0}
+        lamda = {"l2": 100, "grad": 0}
 
     # experimentDatasets = (CVC_EndoSceneStill (train/val/test), CVC_ClinicDB,Kvasir-SEG,
     # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping, CVC_ClinicDB_withoutTest )
