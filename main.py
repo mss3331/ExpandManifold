@@ -162,7 +162,7 @@ if __name__ == '__main__':
     num_epochs = 300
     batch_size = 14
     shuffle = False
-    lamda = {"l2":100,"grad":10} #L2 and Grad
+    lamda = {"l2":10,"grad":10} #L2 and Grad
 
     # ************** modify for full experiment *************
     # load_to_RAM = True
@@ -203,12 +203,12 @@ if __name__ == '__main__':
 
     ################## Expand Manifold models ##########################
         ############### Denosing-reconstruct auto encoder ############
-        #[ExpandMani_unetsqueezed, ExpandMani_unetwithoutskip
+        #[ExpandMani_unetsqueezed, ExpandMani_unetwithoutskip, ExpandMani_VAE
 
         ############## proposed Sgementation framework  ###############
         #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
         # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
-    model_name = "ExpandMani_unetsqueezed"
+    model_name = "ExpandMani_VAE"
     model = getModelFrameWork(model_name)
     if model_name.find('GenSeg')>=0:
         switch_epoch=[-1,-1]

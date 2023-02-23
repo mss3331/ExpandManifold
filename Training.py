@@ -160,7 +160,11 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         if rate > 1:
                             rate = 1 - rate % 1
                         results = model(X, phase, original_masks, rate = rate)
-                        generated_images, generated_masks, original_masks = results
+                        if model_name.find('VAE')>=0:
+                            #if it VAE we need to handle the z_mean, z_log_var to calculate KL
+                            generated_images, generated_masks, original_masks,(z_mean, z_log_var) = results
+                        else:
+                            generated_images, generated_masks, original_masks = results
                     else:  # the old version code i.e., other than GenSeg_IncludeX models
                         generated_images = model[0](X)
                         generated_X = generated_images.clone().detach()
@@ -174,30 +178,30 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
 
                     #reconstruction loss |f-g| "MSELoss
                     loss_l2 = loss_fn_sum(generated_images, X) * lamda['l2']
-                    # gradients = color_gradient(generated_images, 'No reduction', model_name)
-                    # gradients_masked = torch.mul(gradients, 1 - intermediate)  # consider only background
-                    # loss_grad = torch.sum(torch.pow(gradients_masked, 2)) / torch.sum(1 - intermediate)
-                    # if epoch >= switch_epoch[1]:#increse the polyp reconstruction loss to balance it with seg loss
-                    #     loss_l2 = loss_l2 * lamda['l2']
-                    # if epoch < switch_epoch[1]:  # if we are in stage 2 calculate don't include lamda['l2']
-                    #     loss = loss_grad * lamda['grad'] + loss_l2
-                    if epoch >= switch_epoch[1]:  # move to stage 3 loss: ‖f-g * mask(polyp)‖^2 + ‖∇g *mask(1-polyp)‖^2 + BCEWithLoggits
-                        bce = loss_dic['segmentor']
-                        loss_mask = bce(generated_masks, original_masks)
+                    # mask loss
+                    bce = loss_dic['segmentor']
+                    loss_mask = bce(generated_masks, original_masks)
+
+                    # KL Divergence loss only for VAE
+                    if model_name.find('VAE')>=0:
+                        kl_div = -0.5 * torch.sum(1+ z_log_var - z_mean**2 - torch.exp(z_log_var), dim=1)
+                        kl_div = kl_div.mean()
+                        loss = loss_l2 + loss_mask + kl_div
+                    else:
                         loss = loss_l2 + loss_mask
 
-                        # iou = IOU_class01(original_masks, generated_masks)
-                        # iou is numpy array for each image
-                        iou = calculate_metrics_torch(true=original_masks,pred=generated_masks,metrics='jaccard')
-                        iou_background = calculate_metrics_torch(true=original_masks,pred=generated_masks,
-                                                                 metrics='jaccard',ROI='background')
-                        #store all the true and pred masks
-                        if len(all_true_maskes_torch)==0:
-                            all_true_maskes_torch = original_masks.clone().detach()
-                            all_pred_maskes_torch = generated_masks.clone().detach()
-                        else:
-                            all_true_maskes_torch = torch.cat((all_true_maskes_torch,original_masks.clone().detach()))
-                            all_pred_maskes_torch = torch.cat((all_pred_maskes_torch,generated_masks.clone().detach()))
+                    # iou = IOU_class01(original_masks, generated_masks)
+                    # iou is numpy array for each image
+                    iou = calculate_metrics_torch(true=original_masks,pred=generated_masks,metrics='jaccard')
+                    iou_background = calculate_metrics_torch(true=original_masks,pred=generated_masks,
+                                                             metrics='jaccard',ROI='background')
+                    #store all the true and pred masks
+                    if len(all_true_maskes_torch)==0:
+                        all_true_maskes_torch = original_masks.clone().detach()
+                        all_pred_maskes_torch = generated_masks.clone().detach()
+                    else:
+                        all_true_maskes_torch = torch.cat((all_true_maskes_torch,original_masks.clone().detach()))
+                        all_pred_maskes_torch = torch.cat((all_pred_maskes_torch,generated_masks.clone().detach()))
 
                     loss_batches.append(loss.clone().detach().cpu().numpy())
                     loss_l2_batches.append(loss_l2.clone().detach().cpu().numpy())
