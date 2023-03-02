@@ -306,6 +306,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                                                 'Mean':metrics_mMetrics_dic}).transpose().to_excel(file_name)
 
             wandb.log({phase + "_loss": np.mean(loss_batches),
+                       phase + "_KL": np.mean(loss_KL_batches),
                        phase + "_L2": np.mean(loss_l2_batches), phase + "_grad": np.mean(loss_grad_batches),
                        phase + '_BCE_loss': np.mean(loss_mask_batches), phase + '_iou': np.mean(iou_batches),
                        phase + '_original_images_grad': np.mean(original_images_grad), phase + '_generated_images_grad': np.mean(generated_images_grad),
