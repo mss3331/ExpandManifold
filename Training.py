@@ -129,6 +129,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
             loss_l2_batches = []
             loss_grad_batches = []
             loss_mask_batches = []
+            loss_KL_batches = []
             iou_batches = np.array([])
             iou_background_batches = np.array([])
             # metrics_polyp = []
@@ -185,7 +186,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                     # KL Divergence loss only for VAE
                     if model_name.find('VAE')>=0:
                         kl_div = -0.5 * torch.sum(1+ z_log_var - z_mean**2 - torch.exp(z_log_var), dim=1)
-                        kl_div = kl_div.mean()
+                        kl_div = kl_div.mean()/1000
                         loss = loss_l2 + loss_mask + kl_div
                     else:
                         loss = loss_l2 + loss_mask
@@ -205,7 +206,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
 
                     loss_batches.append(loss.clone().detach().cpu().numpy())
                     loss_l2_batches.append(loss_l2.clone().detach().cpu().numpy())
-
+                    loss_KL_batches.append(kl_div.clone().detach().cpu().numpy())
                     loss_mask_batches.append(loss_mask.clone().detach().cpu().numpy())
                     iou_batches=np.append(iou_batches,iou)
                     iou_background_batches=np.append(iou_background_batches,iou_background)
@@ -228,11 +229,11 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                 pbar.set_postfix({phase + ' Epoch': str(epoch) + "/" + str(num_epochs - 1),
                                   'polypIOU': iou_batches.mean(),
                                   'best_val_iou': best_iou['val'],
-                                  'mIOU': np.mean((iou_batches+iou_background_batches)/2),
                                   'Loss': np.mean(loss_batches),
                                   'L2': np.mean(loss_l2_batches),
                                   'BCE_loss': np.mean(loss_mask_batches),
-                                  'original_images_grad': np.mean(original_images_grad),
+                                  'KL_loss': np.mean(loss_KL_batches),
+                                  'mIOU': np.mean((iou_batches + iou_background_batches) / 2)
                                   })
 
             # !!!! calculate metrics for all images. The results are dictionary

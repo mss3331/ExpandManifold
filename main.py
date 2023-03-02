@@ -209,6 +209,8 @@ if __name__ == '__main__':
         #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
         # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
     model_name = "ExpandMani_VAE"
+    if model_name.find('VAE')>=0:
+        learning_rate=0.0001
     model = getModelFrameWork(model_name)
     if model_name.find('GenSeg')>=0:
         switch_epoch=[-1,-1]
