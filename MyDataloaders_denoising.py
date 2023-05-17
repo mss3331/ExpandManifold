@@ -194,7 +194,7 @@ class SegDataset(Dataset):
 # TTR is Train Test Ratio
 def trainTestSplit(dataset, TTR,randomSplit):
     '''This function split train test randomely'''
-    if not isinstance(dataset, collections.Sequence):
+    if not isinstance(dataset, collections.abc.Sequence):
         dataset = (dataset, dataset)
     if randomSplit:
         print("dataset is splitted randomely")
