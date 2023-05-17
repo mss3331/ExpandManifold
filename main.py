@@ -65,8 +65,8 @@ def get_Dataloaders_dic(experimentDatasets):
     '''for now let us make it simple and fixed. Later we would use Yaml config to design dataset.
     for now the experiments as follows:
     1- Train/val/test: EndoSceneStill
-    2- Train/val: CVC-clinicDB, test:Kvasir
-    3- Train/val: Kvasir, test: CVC-clinicDB
+    2- Train/val: CVC_ClinicDB, test:Kvasir
+    3- Train/val: Kvasir, test: CVC_ClinicDB
     '''
     Dataloaders_dic = {}
     if experimentDatasets==None:
@@ -88,20 +88,20 @@ def get_Dataloaders_dic(experimentDatasets):
         dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
                                           shuffle=shuffle, batch_size=batch_size)
         Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
-        Dataloaders_dic['test1'] = getLoadersBySetName('Kvasir-SEG', 'data_C1', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test1'] = getLoadersBySetName('Kvasir_SEG', 'data_C1', target_img_size, train_val_ratio=0,
                                                        batch_size=batch_size)
-        Dataloaders_dic['test2'] = getLoadersBySetName('Kvasir-SEG', 'data_C2', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test2'] = getLoadersBySetName('Kvasir_SEG', 'data_C2', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
-        Dataloaders_dic['test3'] = getLoadersBySetName('Kvasir-SEG', 'data_C3', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test3'] = getLoadersBySetName('Kvasir_SEG', 'data_C3', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
-        Dataloaders_dic['test4'] = getLoadersBySetName('Kvasir-SEG', 'data_C4', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test4'] = getLoadersBySetName('Kvasir_SEG', 'data_C4', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
-        Dataloaders_dic['test5'] = getLoadersBySetName('Kvasir-SEG', 'data_C5', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test5'] = getLoadersBySetName('Kvasir_SEG', 'data_C5', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
     elif  experimentDatasets=='CVC_ClinicDB_withoutTest':
         # CVC train/val, Kvasir Test
         train_val_ratio = 0.6
-        dataloasers = getLoadersBySetName('CVC-ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
+        dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
                                           shuffle=shuffle, batch_size=batch_size)
         Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
     elif experimentDatasets in ['CVC_ClinicDB_Brightness','CVC_ClinicDB_Brightness20'
@@ -116,15 +116,15 @@ def get_Dataloaders_dic(experimentDatasets):
                                                        batch_size=batch_size)
         Dataloaders_dic['val'] = getLoadersBySetName(experimentDatasets, 'data_C2', target_img_size, train_val_ratio=0,
                                                        batch_size=batch_size)
-        Dataloaders_dic['test1'] = getLoadersBySetName('Kvasir-SEG', 'data_C1', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test1'] = getLoadersBySetName('Kvasir_SEG', 'data_C1', target_img_size, train_val_ratio=0,
                                                        batch_size=batch_size)
-        Dataloaders_dic['test2'] = getLoadersBySetName('Kvasir-SEG', 'data_C2', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test2'] = getLoadersBySetName('Kvasir_SEG', 'data_C2', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
-        Dataloaders_dic['test3'] = getLoadersBySetName('Kvasir-SEG', 'data_C3', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test3'] = getLoadersBySetName('Kvasir_SEG', 'data_C3', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
-        Dataloaders_dic['test4'] = getLoadersBySetName('Kvasir-SEG', 'data_C4', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test4'] = getLoadersBySetName('Kvasir_SEG', 'data_C4', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
-        Dataloaders_dic['test5'] = getLoadersBySetName('Kvasir-SEG', 'data_C5', target_img_size, train_val_ratio=0,
+        Dataloaders_dic['test5'] = getLoadersBySetName('Kvasir_SEG', 'data_C5', target_img_size, train_val_ratio=0,
                                                         batch_size=batch_size)
 
         
@@ -157,12 +157,12 @@ if __name__ == '__main__':
     maskDir = 'mask_C1'
     colab_dir = "."
     if run_in_colab:
-        root_dir = "/content/CVC-ClinicDB"
+        root_dir = "/content/CVC_ClinicDB"
         colab_dir = "/content/ExpandManifold"
     num_epochs = 300
     batch_size = 14
     shuffle = False
-    lamda = {"l2":10,"grad":10} #L2 and Grad
+    lamda = {"l2":100,"grad":10} #L2 and Grad
 
     # ************** modify for full experiment *************
     # load_to_RAM = True
@@ -203,12 +203,14 @@ if __name__ == '__main__':
 
     ################## Expand Manifold models ##########################
         ############### Denosing-reconstruct auto encoder ############
-        #[ExpandMani_unetsqueezed, ExpandMani_unetwithoutskip, ExpandMani_VAE
+        # [ExpandMani_unetsqueezed,
+        # ExpandMani_unetwithoutskip * with lamda = {"l2":100,"grad":10} this is the best model that reconstructed original images
+        # ExpandMani_VAE
 
         ############## proposed Sgementation framework  ###############
         #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
         # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
-    model_name = "ExpandMani_VAE"
+    model_name = "ExpandMani_unetwithoutskip"
     if model_name.find('VAE')>=0:
         learning_rate=0.0001
     model = getModelFrameWork(model_name)
@@ -220,7 +222,7 @@ if __name__ == '__main__':
         #we don't have Generator here, hence, nothing to optimize
         lamda = {"l2": 100, "grad": 0}
 
-    # experimentDatasets = (CVC_EndoSceneStill (train/val/test), CVC_ClinicDB,Kvasir-SEG,
+    # experimentDatasets = (CVC_EndoSceneStill (train/val/test), CVC_ClinicDB,Kvasir_SEG,
     # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping, CVC_ClinicDB_withoutTest )
     experimentDatasets = 'CVC_ClinicDB_withoutTest'
 
@@ -238,7 +240,7 @@ if __name__ == '__main__':
     # dataloder_info = (0.01,batch_size, shuffle) # from 0:(0.01*datasize) will be for val the rest for test
     # Dataloaders_test_dic = getDataloadersDic(dataset_info, dataloder_info)
     # Dataloaders_dic['test']=Dataloaders_test_dic['val']
-    #dataset_name = [Kvasir-SEG*5, CVC_ClinicDB*1 ,ETIS_Larib*1, EndoCV*5] 5= data_C1, data_C2 ... data_C5
+    #dataset_name = [Kvasir_SEG*5, CVC_ClinicDB*1 ,ETIS_Larib*1, EndoCV*5] 5= data_C1, data_C2 ... data_C5
     #               CVC_EndoSceneStill, CVC_ClinicDB_withoutTest
 
     Dataloaders_dic= get_Dataloaders_dic(experimentDatasets)
