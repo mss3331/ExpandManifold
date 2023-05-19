@@ -104,6 +104,13 @@ def get_Dataloaders_dic(experimentDatasets):
         dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
                                           shuffle=shuffle, batch_size=batch_size)
         Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
+    elif experimentDatasets == 'CVC_ClinicDB_KvasirOrigTest':
+        train_val_ratio = 0.7
+        dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1', target_img_size, train_val_ratio=train_val_ratio,
+                                          shuffle=shuffle, batch_size=batch_size)
+        Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
+        Dataloaders_dic['test1'] = getLoadersBySetName('Kvasir_SEG_original', 'data_C1', target_img_size, train_val_ratio=0,
+                                                       batch_size=batch_size)
     elif experimentDatasets in ['CVC_ClinicDB_Brightness','CVC_ClinicDB_Brightness20'
                                 ,'CVC_ClinicDB_flipping','CVC_ClinicDB_rotate'
                                 ,'CVC_ClinicDB_shear']:
@@ -210,7 +217,7 @@ if __name__ == '__main__':
         ############## proposed Sgementation framework  ###############
         #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
         # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
-    model_name = "ExpandMani_unetwithoutskip"
+    model_name = "GenSeg_Vanilla_TL_lraspp"
     if model_name.find('VAE')>=0:
         learning_rate=0.0001
     model = getModelFrameWork(model_name)
@@ -223,8 +230,8 @@ if __name__ == '__main__':
         lamda = {"l2": 100, "grad": 0}
 
     # experimentDatasets = (CVC_EndoSceneStill (train/val/test), CVC_ClinicDB,Kvasir_SEG,
-    # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping, CVC_ClinicDB_withoutTest )
-    experimentDatasets = 'CVC_ClinicDB_withoutTest'
+    # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping, CVC_ClinicDB_withoutTest, CVC_ClinicDB_KvasirOrigTest )
+    experimentDatasets = 'CVC_ClinicDB_KvasirOrigTest'
 
     # Start WandB recording
     initializWandb()
