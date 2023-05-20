@@ -190,6 +190,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         loss = loss_l2 + loss_mask + kl_div
                     else:
                         loss = loss_l2 + loss_mask
+                        kl_div = torch.zeros((1))
 
                     # iou = IOU_class01(original_masks, generated_masks)
                     # iou is numpy array for each image
