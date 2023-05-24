@@ -104,6 +104,12 @@ def get_Dataloaders_dic(experimentDatasets):
         dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
                                           shuffle=shuffle, batch_size=batch_size)
         Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
+    elif  experimentDatasets=='KvasirOrig_withoutTest':
+        # CVC train/val, Kvasir Test
+        train_val_ratio = 0.7
+        dataloasers = getLoadersBySetName('Kvasir_SEG_original', 'data_C1',target_img_size, train_val_ratio=train_val_ratio,
+                                          shuffle=shuffle, batch_size=batch_size)
+        Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
     elif experimentDatasets == 'CVC_ClinicDB_KvasirOrigTest':
         train_val_ratio = 0.7
         dataloasers = getLoadersBySetName('CVC_ClinicDB', 'data_C1', target_img_size, train_val_ratio=train_val_ratio,
@@ -111,6 +117,19 @@ def get_Dataloaders_dic(experimentDatasets):
         Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
         Dataloaders_dic['test1'] = getLoadersBySetName('Kvasir_SEG_original', 'data_C1', target_img_size, train_val_ratio=0,
                                                        batch_size=batch_size)
+    elif experimentDatasets == 'KvasirOrig_CVCEndoLaribTest':
+        train_val_ratio = 0.7
+        dataloasers = getLoadersBySetName('Kvasir_SEG_original', 'data_C1', target_img_size, train_val_ratio=train_val_ratio,
+                                          shuffle=shuffle, batch_size=batch_size)
+        Dataloaders_dic['train'], Dataloaders_dic['val'] = dataloasers
+        Dataloaders_dic['test1'] = getLoadersBySetName('CVC_ClinicDB', 'data_C1', target_img_size, train_val_ratio=0,
+                                                       batch_size=batch_size)
+        Dataloaders_dic['test2'] = getLoadersBySetName('CVC_EndoSceneStill', ['data_C1', 'data_C2', 'data_C3'],
+                                                       target_img_size, train_val_ratio=0,
+                                                       batch_size=batch_size)
+        Dataloaders_dic['test3'] = getLoadersBySetName('ETIS_LaribPolypDB', 'data_C1', target_img_size, train_val_ratio=0,
+                                                       batch_size=batch_size)
+
     elif experimentDatasets in ['CVC_ClinicDB_Brightness','CVC_ClinicDB_Brightness20'
                                 ,'CVC_ClinicDB_flipping','CVC_ClinicDB_rotate'
                                 ,'CVC_ClinicDB_shear']:
@@ -230,8 +249,9 @@ if __name__ == '__main__':
         lamda = {"l2": 100, "grad": 0}
 
     # experimentDatasets = (CVC_EndoSceneStill (train/val/test), CVC_ClinicDB,Kvasir_SEG,
-    # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping, CVC_ClinicDB_withoutTest, CVC_ClinicDB_KvasirOrigTest )
-    experimentDatasets = 'CVC_ClinicDB_KvasirOrigTest'
+    # CVC_ClinicDB_Brightness20, CVC_ClinicDB_flipping, CVC_ClinicDB_withoutTest,
+    # CVC_ClinicDB_KvasirOrigTest, KvasirOrig_CVCEndoLaribTest, KvasirOrig_withoutTest )
+    experimentDatasets = 'KvasirOrig_CVCEndoLaribTest'
 
     # Start WandB recording
     initializWandb()
