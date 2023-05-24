@@ -243,6 +243,11 @@ def pruneFileNames(pair, dataset_name="CVC-ClinicDB"):
         x = x.split('/')[-1]
         x = x.split('\\')[-1]  # images_C1\\1.png --> 1.png for both (linux) and (windows)
         x = x.split('_mask')[0]  # C3_0110_mask.jpg --> C3_0110
+        x_temp = x.split('p')[0]  # this is for Larib dataset p10.tif --> 10.tif. Ofcourse EndoScene has files 10.bmp!
+        if x_temp == '':
+            x = x.split('p')[-1]
+        else:
+            x = x.split('p')[0]
         x = x.split('.')[0]
         names.append(x)
     return names
