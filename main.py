@@ -234,8 +234,8 @@ if __name__ == '__main__':
         # ExpandMani_VAE
 
         ############## proposed Sgementation framework  ###############
-        #[ExpandMani_Seg_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
-        # ExpandMani_unetwithoutskip_deeplab, ExpandMani_Seg_unetwithoutskip_lraspp
+        #[ExpandMani_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
+        # ExpandMani_unetwithoutskip_deeplab, ExpandMani_unetwithoutskip_lraspp
     model_name = "GenSeg_Vanilla_TL_lraspp"
     if model_name.find('VAE')>=0:
         learning_rate=0.0001
