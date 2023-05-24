@@ -233,9 +233,13 @@ if __name__ == '__main__':
         # ExpandMani_unetwithoutskip * with lamda = {"l2":100,"grad":10} this is the best model that reconstructed original images
         # ExpandMani_VAE
 
-        ############## proposed Sgementation framework  ###############
+        ############## proposed Sgementation framework  #############
+        #                Without TL                                 #
         #[ExpandMani_unetwithoutskip_unet, ExpandMani_unetwithoutskip_fcn,
         # ExpandMani_unetwithoutskip_deeplab, ExpandMani_unetwithoutskip_lraspp
+        #                  TL                                       #
+        # ExpandMani_TL_unetwithoutskip_unet, ExpandMani_TL_unetwithoutskip_fcn,
+        # ExpandMani_TL_unetwithoutskip_deeplab, ExpandMani_TL_unetwithoutskip_lraspp
     model_name = "GenSeg_Vanilla_TL_lraspp"
     if model_name.find('VAE')>=0:
         learning_rate=0.0001
