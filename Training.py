@@ -106,11 +106,12 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
     best_iou = {k: 0 for k in data_loader_dic.keys()}
     best_iou_epoch = -1
     loss_fn_sum = loss_dic['generator']
+    generator_models = ['ExpandMani_unetsqueezed', 'ExpandMani_unetwithoutskip', 'ExpandMani_VAE']
     #this variable to track the performance of the generator
     # this number is created according to the best gen loss at
     # Denoising_trainCVC_testKvasir_Exp4_IncludeAugX_hue_avgV2_unet_Lraspp
-    # best_val_generator_loss=0.005
-    best_val_generator_loss=1000
+    # best_train_generator_loss=0.005
+    best_train_generator_loss=1000
     for epoch in range(0, num_epochs + 1):
 
         for phase in data_loader_dic.keys():
@@ -127,15 +128,12 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
             # TODO: last epoch may have less images hence, mean is not accurate
             loss_batches = []
             loss_l2_batches = []
-            loss_grad_batches = []
             loss_mask_batches = []
             loss_KL_batches = []
             iou_batches = np.array([])
             iou_background_batches = np.array([])
             # metrics_polyp = []
             # metrics_background = []
-            original_images_grad = []
-            generated_images_grad = []
 
             all_true_maskes_torch = []
             all_pred_maskes_torch = []
@@ -241,32 +239,40 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
             mean_metrics_polyp = calculate_metrics_torch(all_true_maskes_torch, all_pred_maskes_torch,
                                                          reduction='mean',cloned_detached=True)
             # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            if phase=='train' and model_name in generator_models:
+                # if the generator is getting better save a checkpoint for the generator
+                generator_loss = np.mean(loss_l2_batches)
+
+                if best_train_generator_loss > generator_loss:
+                    print('saving a checkpoint for the best generator '
+                          '\n previously={} and now={}'.format(best_train_generator_loss, generator_loss))
+                    saving_checkpoint(epoch, model, optimizer,
+                                      generator_loss, -1,
+                                      generator_loss, -1,
+                                      colab_dir, model_name)
+                    best_train_generator_loss = generator_loss
 
             if phase != 'train':
-                if np.mean(loss_batches) < best_loss[phase]:
-                    print('best {} loss={} so far ...'.format(phase,np.mean(loss_batches)))
-                    wandb.run.summary["best_{}_loss_epoch".format(phase)] = epoch
-                    wandb.run.summary["best_{}_loss".format(phase)] = np.mean(loss_batches)
-                    best_loss[phase] = np.mean(loss_batches)
-                    if phase=='val':
-                        print('better validation loss- saving checkpoint')
-                        saving_checkpoint(epoch, model, optimizer,
-                                          best_loss[phase], 0,
-                                          0, 0,
-                                          colab_dir, model_name)
-                if phase=='val' :
-                    # if the generator is getting better save a checkpoint for the generator
-                    generator_loss = np.mean(loss_l2_batches) + np.mean(loss_grad_batches)
+                if best_iou_epoch == epoch:  # calculate background metrics for val and test if it is the best epoch
+                    metrics_dic_background = calculate_metrics_torch(all_true_maskes_torch, all_pred_maskes_torch,
+                                                                     reduction='mean', cloned_detached=True,
+                                                                     ROI='background')
+                    metrics_dic_polyp = mean_metrics_polyp
 
-                    if best_val_generator_loss > generator_loss:
-                        print('saving a checkpoint for the best generator '
-                              '\n previously={} and now={}'.format(best_val_generator_loss,generator_loss))
-                        saving_checkpoint(epoch, model, optimizer,
-                                          generator_loss, generator_loss,
-                                          generator_loss, generator_loss,
-                                          colab_dir, model_name)
-                        best_val_generator_loss = generator_loss
-                        
+                    metrics_mMetrics_dic = {metric: (metrics_dic_polyp[metric] + metrics_dic_background[metric]) / 2
+                                            for metric in metrics_dic_background.keys()}
+
+                    print(phase, ':', metrics_dic_polyp)
+                    wandb.run.summary["dict_{}".format(phase)] = metrics_dic_polyp
+
+                    if inference:
+                        file_name = colab_dir + "/results/bestGenerator_{}_summary_report.xlsx".format(phase)
+                    else:
+                        file_name = colab_dir + "/results/{}_summary_report.xlsx".format(phase)
+                    pandas.DataFrame.from_dict({'Polyp': metrics_dic_polyp, 'Background': metrics_dic_background,
+                                                'Mean': metrics_mMetrics_dic}).transpose().to_excel(file_name)
+
+                if phase=='val':
                     #if Polyp mean is getting better
                     if mean_metrics_polyp['jaccard'] > best_iou[phase]:
                         wandb.run.summary["best_{}_iou".format(phase)] = np.mean(iou_batches)
@@ -275,42 +281,19 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         best_loss[phase] = np.mean(loss_batches)
                         best_iou_epoch = epoch
                         print('best val_iou')
-                        print('testing on a test set....\n')
+                        if model_name not in generator_models:
+                            print('Saving a checkpoint')
+                            saving_checkpoint(epoch, model, optimizer,
+                                              best_loss['val'], -1, #test_loss
+                                              best_iou['val'],  -1, #test_mIOU
+                                              colab_dir, model_name)
+                            print('testing on a test set....\n')
 
-
-                if phase.find('test')>=0:#if we reach inside this, it means we achieved a better val iou
-                    print('saving a checkpoint')
-                    best_iou[phase] = mean_metrics_polyp['jaccard']
-                    best_loss[phase] = np.mean(loss_batches)
-                    if phase == 'test1': #I want to save the model weights only once, not for every test set
-                        saving_checkpoint(epoch, model, optimizer,
-                                      best_loss['val'], best_loss['test1'],
-                                      best_iou['val'], best_iou['test1'],
-                                      colab_dir, model_name)
-                # calculate summary results and store them in results
-                if best_iou_epoch == epoch:#calculate metrics for val and test if it is the best epoch
-                    metrics_dic_background = calculate_metrics_torch(all_true_maskes_torch, all_pred_maskes_torch,
-                                                         reduction='mean',cloned_detached=True,ROI='background')
-                    metrics_dic_polyp = mean_metrics_polyp
-
-                    metrics_mMetrics_dic = {metric:(metrics_dic_polyp[metric]+metrics_dic_background[metric])/2
-                                            for metric in metrics_dic_background.keys()}
-
-                    print(phase,':',metrics_dic_polyp)
-                    wandb.run.summary["dict_{}".format(phase)] = metrics_dic_polyp
-
-                    if inference:
-                        file_name = colab_dir + "/results/bestGenerator_{}_summary_report.xlsx".format(phase)
-                    else:
-                        file_name = colab_dir + "/results/{}_summary_report.xlsx".format(phase)
-                    pandas.DataFrame.from_dict({'Polyp':metrics_dic_polyp,'Background': metrics_dic_background,
-                                                'Mean':metrics_mMetrics_dic}).transpose().to_excel(file_name)
 
             wandb.log({phase + "_loss": np.mean(loss_batches),
-                       phase + "_KL": np.mean(loss_KL_batches),
-                       phase + "_L2": np.mean(loss_l2_batches), phase + "_grad": np.mean(loss_grad_batches),
+                       phase + "_L2": np.mean(loss_l2_batches),
                        phase + '_BCE_loss': np.mean(loss_mask_batches), phase + '_iou': np.mean(iou_batches),
-                       phase + '_original_images_grad': np.mean(original_images_grad), phase + '_generated_images_grad': np.mean(generated_images_grad),
+                       phase + "_KL": np.mean(loss_KL_batches),
                        "best_val_loss": best_loss['val'],
                        'best_val_iou': best_iou['val'], phase + "_epoch": epoch},
                       step=epoch)
@@ -353,3 +336,19 @@ def cat_split(tensor_s):
         return torch.cat(tensor_s,dim=0)
     else: # or split
         return tensor_s.chunk(chunks=2)
+
+
+#if phase != 'train':
+# Saving the best loss for the validation
+# if np.mean(loss_batches) < best_loss[phase]:
+#     print('best {} loss={} so far ...'.format(phase,np.mean(loss_batches)))
+#     wandb.run.summary["best_{}_loss_epoch".format(phase)] = epoch
+#     wandb.run.summary["best_{}_loss".format(phase)] = np.mean(loss_batches)
+#     best_loss[phase] = np.mean(loss_batches)
+#     if phase=='val':
+#         print('better validation loss- saving checkpoint')
+#         saving_checkpoint(epoch, model, optimizer,
+#                           best_loss[phase], 0,
+#                           0, 0,
+#                           colab_dir, model_name)
+# calculate summary results and store them in results
