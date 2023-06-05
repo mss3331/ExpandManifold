@@ -132,7 +132,7 @@ class ExpandMani_AE_AvgMaskGenSeg(nn.Module):
             generated_images, generated_masks, _, z_vectors = generator_result
 
         predicted_masks = self.segmentor_model(x)
-        if phase.find('val')>=0 and phase.find('test')>=0:
+        if phase.find('val')>=0 or phase.find('test')>=0:
             avg_mask = 0.5*predicted_masks + 0.5*generated_masks
 
         '''
