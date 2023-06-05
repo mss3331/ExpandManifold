@@ -113,3 +113,35 @@ def getGenerator(model_name):
         model = unet_withoutskip(in_channels=3, out_channels=5, n_blocks=5, activation='relu', normalization='batch',
                                  conv_mode='same', dim=2)
     return model
+
+class ExpandMani_AE_AvgMaskGenSeg(nn.Module):
+    '''This model will average both masks of the generator and segmentor to generate final mask'''
+    def __init__(self, Gen_Seg_arch, input=3, out = 2):
+        super().__init__()
+        self.generator_model = loadCheckPoint(Gen_Seg_arch[0])
+        self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
+
+    def forward(self, x, phase, truth_masks, rate, z_vectors=None):
+        '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires
+        z_vectors'''
+
+        #generate images according to z_prime
+        with torch.set_grad_enabled(False):
+            #to get the latent vector z
+            generator_result = self.generator_model(x, phase, truth_masks, returnZ= True)
+            generated_images, generated_masks, _, z_vectors = generator_result
+
+        predicted_masks = self.segmentor_model(x)
+        if phase.find('val')>=0 and phase.find('test')>=0:
+            avg_mask = 0.5*predicted_masks + 0.5*generated_masks
+
+        '''
+        generated_images: From the decoder part of the generative model
+        predicted_masks : From the segmentation model
+        truth_masks: Is combination between generated_mask (if we trust the generative model to create a valid mask)
+        and the orignial masks
+        '''
+        if phase=='train':
+            return generated_images, predicted_masks, truth_masks
+        else:
+            return generated_images, avg_mask, truth_masks

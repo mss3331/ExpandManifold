@@ -2,7 +2,7 @@ from models.GenSeg_Models import *
 from models.unet_withoutskip import UNet as unet_withoutskip
 from models.VAEModels import VAE as VAE
 from models.unet_withoutskip_withSqueeze import UNet_squeeze as UNet_squeeze
-from models.ExpandMani_Models import ExpandMani_AE
+from models.ExpandMani_Models import ExpandMani_AE, ExpandMani_AE_AvgMaskGenSeg
 
 def getModelFrameWork(model_name):
     # identify which models for Gen Seg
@@ -60,6 +60,8 @@ def getModelFrameWork(model_name):
             model = unet_withoutskip(in_channels=3, out_channels=5,n_blocks=5,activation='relu',normalization='batch',conv_mode='same',dim=2)
         elif model_name == 'ExpandMani_VAE':
             model = VAE()
+        elif model_name.find('ExpandMani_TL_AvgMaskGenSeg'):
+            model = ExpandMani_AE_AvgMaskGenSeg(Gen_Seg_arch)
         else:
             model = ExpandMani_AE(Gen_Seg_arch)
 
