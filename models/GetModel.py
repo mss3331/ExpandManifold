@@ -60,7 +60,7 @@ def getModelFrameWork(model_name):
             model = unet_withoutskip(in_channels=3, out_channels=5,n_blocks=5,activation='relu',normalization='batch',conv_mode='same',dim=2)
         elif model_name == 'ExpandMani_VAE':
             model = VAE()
-        elif model_name.find('ExpandMani_TL_AvgMaskGenSeg'):
+        elif model_name.find('AvgMaskGenSeg')>=0:
             model = ExpandMani_AE_AvgMaskGenSeg(Gen_Seg_arch)
         else:
             model = ExpandMani_AE(Gen_Seg_arch)

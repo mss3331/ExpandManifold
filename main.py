@@ -242,7 +242,7 @@ if __name__ == '__main__':
         # ExpandMani_TL_unetwithoutskip_deeplab, ExpandMani_TL_unetwithoutskip_lraspp
         ############# for my own interrest ##########################
         # ExpandMani_TL_AvgMaskGenSeg_lraspp
-    model_name = "ExpandMani_TL_AvgMaskGenSeg_lraspp"
+    model_name = "ExpandMani_AvgMaskGenSeg_TL_unetwithoutskip_lraspp"
     if model_name.find('VAE')>=0:
         learning_rate=0.0001
     model = getModelFrameWork(model_name)
