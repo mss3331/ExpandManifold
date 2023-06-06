@@ -145,3 +145,37 @@ class ExpandMani_AE_AvgMaskGenSeg(nn.Module):
             return generated_images, predicted_masks, truth_masks
         else:
             return generated_images, avg_mask, truth_masks
+
+class ExpandMani_AE_SpatialInterpolate(nn.Module):
+    '''This model'''
+    def __init__(self, Gen_Seg_arch, input=3, out = 2):
+        super().__init__()
+        self.generator_model = loadCheckPoint(Gen_Seg_arch[0])
+        self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
+
+    def forward(self, x, phase, truth_masks, rate, z_vectors=None):
+        '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires
+        z_vectors'''
+
+        #generate images according to z_prime
+        with torch.set_grad_enabled(False):
+            #to get the latent vector z
+            generator_result = self.generator_model(x, phase, truth_masks, returnZ= True)
+            generated_images, generated_masks, _, _ = generator_result
+
+        if phase=='train':
+            '''The input x should be original image and interpolation images 
+               the truth_mask should be double for training
+             '''
+            generated_images = rate*generated_images + (1-rate)* x
+            x = catOrSplit([generated_images, x])
+            truth_masks = catOrSplit([truth_masks, truth_masks])
+
+        predicted_masks = self.segmentor_model(x)
+        '''
+        generated_images: From the decoder part of the generative model
+        predicted_masks : From the segmentation model
+        truth_masks: Is combination between generated_mask (if we trust the generative model to create a valid mask)
+        and the orignial masks
+        '''
+        return generated_images, predicted_masks, truth_masks

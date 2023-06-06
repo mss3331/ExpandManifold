@@ -2,6 +2,7 @@ import torch
 import wandb
 import numpy as np
 from tqdm import tqdm
+from math import sin, pi
 from torch import nn
 from pprint import pprint
 import pandas
@@ -155,9 +156,8 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         results = model(X, phase, original_masks)
                         generated_images, generated_masks, original_masks = results
                     elif model_name.find('ExpandMani') >= 0:
-                        rate = epoch * 2 / num_epochs
-                        if rate > 1:
-                            rate = 1 - rate % 1
+                        cycles = 10
+                        rate = (1+sin(cycles*epoch/num_epochs))/2
                         results = model(X, phase, original_masks, rate = rate)
                         if model_name.find('VAE')>=0:
                             #if it VAE we need to handle the z_mean, z_log_var to calculate KL
