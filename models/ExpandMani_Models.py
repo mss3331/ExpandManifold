@@ -167,7 +167,7 @@ class ExpandMani_AE_SpatialInterpolate(nn.Module):
             '''The input x should be original image and interpolation images 
                the truth_mask should be double for training
              '''
-            generated_images = rate*generated_images + (1-rate)* x
+            generated_images = rate*x + (1-rate)* generated_images
             x = catOrSplit([generated_images, x])
             truth_masks = catOrSplit([truth_masks, truth_masks])
 
