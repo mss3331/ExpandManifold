@@ -62,7 +62,7 @@ def getModelFrameWork(model_name):
             model = VAE()
         elif model_name.find('AvgMaskGenSeg')>=0:
             model = ExpandMani_AE_AvgMaskGenSeg(Gen_Seg_arch)
-        elif model_name.find('ExpandMani_SpatialInterpolate'):
+        elif model_name.find('ExpandMani_SpatialInterpolate')>=0:
             model = ExpandMani_AE_SpatialInterpolate(Gen_Seg_arch)
         else:
             model = ExpandMani_AE(Gen_Seg_arch)
