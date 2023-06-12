@@ -177,16 +177,16 @@ class ExpandMani_AE_SpatInterTVstyle(nn.Module):
     '''This model'''
     def __init__(self, Gen_Seg_arch, input=3, out = 2):
         super().__init__()
-        self.generator_model = getGenerator('ExpandMani_unetwithoutskip')
+        self.generator_model = loadCheckPoint(Gen_Seg_arch[0])
         self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
 
     def forward(self, x, phase, truth_masks, rate, z_vectors=None):
         '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires
         z_vectors'''
 
-
-        generator_result = self.generator_model(x, phase, truth_masks)
-        generated_images, generated_masks, truth_masks = generator_result
+        with torch.set_grad_enabled(False):
+            generator_result = self.generator_model(x, phase, truth_masks)
+            generated_images, generated_masks, truth_masks = generator_result
 
         if phase=='train':
             '''The input x should be original image and interpolation images 
@@ -196,7 +196,6 @@ class ExpandMani_AE_SpatInterTVstyle(nn.Module):
             x = catOrSplit([generated_images, x])
             truth_masks = catOrSplit([truth_masks, truth_masks])
         else:
-            generated_images = generated_images
             x = catOrSplit([generated_images, x])
 
         predicted_masks = self.segmentor_model(x)
