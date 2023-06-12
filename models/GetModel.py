@@ -2,7 +2,7 @@ from models.GenSeg_Models import *
 from models.unet_withoutskip import UNet as unet_withoutskip
 from models.VAEModels import VAE as VAE
 from models.unet_withoutskip_withSqueeze import UNet_squeeze as UNet_squeeze
-from models.ExpandMani_Models import ExpandMani_AE, ExpandMani_AE_AvgMaskGenSeg, ExpandMani_AE_SpatialInterpolate
+from models.ExpandMani_Models import ExpandMani_AE, ExpandMani_AE_AvgMaskGenSeg, ExpandMani_AE_SpatialInterpolate, ExpandMani_AE_SpatInterTVstyle, ExpandMani_AE_TVstyle
 
 def getModelFrameWork(model_name):
     # identify which models for Gen Seg
@@ -64,6 +64,10 @@ def getModelFrameWork(model_name):
             model = ExpandMani_AE_AvgMaskGenSeg(Gen_Seg_arch)
         elif model_name.find('ExpandMani_SpatialInterpolate')>=0:
             model = ExpandMani_AE_SpatialInterpolate(Gen_Seg_arch)
+        elif model_name.find('ExpandMani_SpatInterTVstyle')>=0:
+            model = ExpandMani_AE_SpatInterTVstyle(Gen_Seg_arch)
+        elif model_name.find('ExpandMani_TVstyle')>=0:
+            model = ExpandMani_AE_TVstyle(Gen_Seg_arch)
         else:
             model = ExpandMani_AE(Gen_Seg_arch)
 

@@ -77,12 +77,6 @@ class ExpandMani_AE(nn.Module):
         return generated_images, predicted_masks, truth_masks
 
 
-
-
-
-
-
-
 def getSegmentor(model_name='unet',pretrianed=False, in_channels=3, out_channels=2,):
     if not isinstance(model_name,str):
         return model_name #it means that model_name=torchvision.transforms.Augmentation or nn.Identity or something else
@@ -178,4 +172,73 @@ class ExpandMani_AE_SpatialInterpolate(nn.Module):
         truth_masks: Is combination between generated_mask (if we trust the generative model to create a valid mask)
         and the orignial masks
         '''
+        return generated_images, predicted_masks, truth_masks
+class ExpandMani_AE_SpatInterTVstyle(nn.Module):
+    '''This model'''
+    def __init__(self, Gen_Seg_arch, input=3, out = 2):
+        super().__init__()
+        self.generator_model = loadCheckPoint(Gen_Seg_arch[0])
+        self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
+
+    def forward(self, x, phase, truth_masks, rate, z_vectors=None):
+        '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires
+        z_vectors'''
+
+        #generate images according to z_prime
+        with torch.set_grad_enabled(False):
+            #to get the latent vector z
+            generator_result = self.generator_model(x, phase, truth_masks, returnZ= True)
+            generated_images, generated_masks, _, _ = generator_result
+
+        if phase=='train':
+            '''The input x should be original image and interpolation images 
+               the truth_mask should be double for training
+             '''
+            generated_images = rate*x + (1-rate)* generated_images
+            x = catOrSplit([generated_images, x])
+            truth_masks = catOrSplit([truth_masks, truth_masks])
+        else:
+            generated_images = generated_images
+            x = catOrSplit([generated_images, x])
+
+        predicted_masks = self.segmentor_model(x)
+
+        if phase !='train':
+            predicted_masks1, predicted_masks2 = catOrSplit(predicted_masks)
+            predicted_masks = (predicted_masks1+predicted_masks2)/2
+        '''
+        generated_images: From the decoder part of the generative model
+        predicted_masks : From the segmentation model
+        truth_masks: Is combination between generated_mask (if we trust the generative model to create a valid mask)
+        and the orignial masks
+        '''
+        return generated_images, predicted_masks, truth_masks
+
+class ExpandMani_AE_TVstyle(nn.Module):
+    '''This model mimic GenSeg_IncludeX_avgV2 in which both the Gen and Seg is trained'''
+    def __init__(self, Gen_Seg_arch, input=3, out = 2):
+        super().__init__()
+        self.generator_model = getGenerator(Gen_Seg_arch[0])
+        self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
+
+    def forward(self, x, phase, truth_masks, rate, z_vectors=None):
+        '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires
+        z_vectors'''
+
+        #generate images and masks, predict masks
+        generator_result = self.generator_model(x, phase, truth_masks)
+        generated_images, generated_masks, truth_masks = generator_result
+
+        generated_images_clone = generated_images.clone().detach()
+        predicted_masks = self.segmentor_model(catOrSplit([x, generated_images_clone]))
+        if phase =='train':
+            truth_masks = catOrSplit([truth_masks,truth_masks])
+
+        if phase !='train':
+            # average the result
+            predicted_masks1, predicted_masks2 = catOrSplit(predicted_masks)
+            predicted_masks = 0.5*predicted_masks1 + 0.5*predicted_masks2
+
+
+
         return generated_images, predicted_masks, truth_masks
