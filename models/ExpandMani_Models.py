@@ -185,7 +185,7 @@ class ExpandMani_AE_SpatInterTVstyle(nn.Module):
         z_vectors'''
 
         with torch.set_grad_enabled(False):
-            generator_result = self.generator_model(x, phase, truth_masks)
+            generator_result = self.generator_model(x, phase, truth_masks, rate)
             generated_images, generated_masks, truth_masks = generator_result
 
         if phase=='train':
