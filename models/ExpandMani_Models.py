@@ -177,18 +177,16 @@ class ExpandMani_AE_SpatInterTVstyle(nn.Module):
     '''This model'''
     def __init__(self, Gen_Seg_arch, input=3, out = 2):
         super().__init__()
-        self.generator_model = loadCheckPoint(Gen_Seg_arch[0])
+        self.generator_model = getGenerator('ExpandMani_unetwithoutskip')
         self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
 
     def forward(self, x, phase, truth_masks, rate, z_vectors=None):
         '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires
         z_vectors'''
 
-        #generate images according to z_prime
-        with torch.set_grad_enabled(False):
-            #to get the latent vector z
-            generator_result = self.generator_model(x, phase, truth_masks, returnZ= True)
-            generated_images, generated_masks, _, _ = generator_result
+
+        generator_result = self.generator_model(x, phase, truth_masks)
+        generated_images, generated_masks, truth_masks = generator_result
 
         if phase=='train':
             '''The input x should be original image and interpolation images 
@@ -218,7 +216,7 @@ class ExpandMani_AE_TVstyle(nn.Module):
     '''This model mimic GenSeg_IncludeX_avgV2 in which both the Gen and Seg is trained'''
     def __init__(self, Gen_Seg_arch, input=3, out = 2):
         super().__init__()
-        self.generator_model = getGenerator(Gen_Seg_arch[0])
+        self.generator_model = getGenerator('ExpandMani_unetwithoutskip')
         self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
 
     def forward(self, x, phase, truth_masks, rate, z_vectors=None):
