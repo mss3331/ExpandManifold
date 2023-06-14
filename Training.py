@@ -156,7 +156,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                         results = model(X, phase, original_masks)
                         generated_images, generated_masks, original_masks = results
                     elif model_name.find('ExpandMani') >= 0:
-                        cycles = 3
+                        cycles = 9
                         rate = (1+cos(cycles*2*pi*epoch/num_epochs))/2
                         results = model(X, phase, original_masks, rate = rate)
                         if model_name.find('VAE')>=0:
