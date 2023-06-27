@@ -245,6 +245,7 @@ if __name__ == '__main__':
         ##############  TV style ###############################
         # ExpandMani_SpatInterTVstyle_TL_unetwithoutskip_lraspp,
         # ExpandMani_TVstyle_TL_unetwithoutskip_lraspp
+        # ExpandMani_TVstyle_hue_TL_unetwithoutskip_lraspp
         ############# for my own interrest ##########################
         # ExpandMani_TL_AvgMaskGenSeg_lraspp
     model_name = "ExpandMani_SpatInterTVstyle_TL_unetwithoutskip_lraspp"

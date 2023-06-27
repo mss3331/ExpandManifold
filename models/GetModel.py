@@ -8,7 +8,9 @@ def getModelFrameWork(model_name):
     # identify which models for Gen Seg
     Gen_Seg_arch = model_name.split('_')[-2:]
     pretrained = model_name.find('TL') >= 0
-
+    aug = None
+    if model_name.find('hue') >= 0:
+        aug = torchvision.transforms.ColorJitter(hue=0.05)
     if model_name.find('unet-proposed')>=0:
         model = unet_proposed()
     elif model_name.find('Conventional') >= 0:
@@ -65,9 +67,9 @@ def getModelFrameWork(model_name):
         elif model_name.find('ExpandMani_SpatialInterpolate')>=0:
             model = ExpandMani_AE_SpatialInterpolate(Gen_Seg_arch)
         elif model_name.find('ExpandMani_SpatInterTVstyle')>=0:
-            model = ExpandMani_AE_SpatInterTVstyle(Gen_Seg_arch)
+            model = ExpandMani_AE_SpatInterTVstyle(Gen_Seg_arch,aug=aug)
         elif model_name.find('ExpandMani_TVstyle')>=0:
-            model = ExpandMani_AE_TVstyle(Gen_Seg_arch)
+            model = ExpandMani_AE_TVstyle(Gen_Seg_arch,aug=aug)
         else:
             model = ExpandMani_AE(Gen_Seg_arch)
 
