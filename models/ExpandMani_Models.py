@@ -205,7 +205,8 @@ class ExpandMani_AE_SpatInterTVstyle(nn.Module):
 
         if phase !='train':
             predicted_masks1, predicted_masks2 = catOrSplit(predicted_masks)
-            predicted_masks = (predicted_masks1+predicted_masks2)/2
+            # predicted_masks = (predicted_masks1+predicted_masks2)/2
+            predicted_masks = predicted_masks2
         '''
         generated_images: From the decoder part of the generative model
         predicted_masks : From the segmentation model
@@ -244,7 +245,8 @@ class ExpandMani_AE_TVstyle(nn.Module):
         if phase !='train':
             # average the result
             predicted_masks1, predicted_masks2 = catOrSplit(predicted_masks)
-            predicted_masks = 0.5*predicted_masks1 + 0.5*predicted_masks2
+            # predicted_masks = 0.5*predicted_masks1 + 0.5*predicted_masks2
+            predicted_masks = predicted_masks1
 
 
 
