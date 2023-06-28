@@ -195,11 +195,13 @@ class ExpandMani_AE_SpatInterTVstyle(nn.Module):
                the truth_mask should be double for training
              '''
             generated_images = rate*x + (1-rate)* generated_images
-            truth_masks = catOrSplit([truth_masks, truth_masks])
+
             if self.aug:
                 truth_masks = catOrSplit([truth_masks, truth_masks, truth_masks])
                 x_aug = self.aug(x)
                 input_images = catOrSplit([x, generated_images, x_aug])
+            else:
+                truth_masks = catOrSplit([truth_masks, truth_masks])
 
         predicted_masks = self.segmentor_model(input_images)
 
