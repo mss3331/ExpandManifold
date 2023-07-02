@@ -175,16 +175,18 @@ class ExpandMani_AE_SpatialInterpolate(nn.Module):
         return generated_images, predicted_masks, truth_masks
 class ExpandMani_AE_SpatInterTVstyle(nn.Module):
     '''This model'''
-    def __init__(self, Gen_Seg_arch,aug, input=3, out = 2):
+    def __init__(self, Gen_Seg_arch,aug,rescale_rate=False, input=3, out = 2):
         super().__init__()
         self.aug = aug
         self.generator_model = loadCheckPoint(Gen_Seg_arch[0])
         self.segmentor_model = getSegmentor(Gen_Seg_arch[1])
+        self.rescale_rate = rescale_rate
 
     def forward(self, x, phase, truth_masks, rate, z_vectors=None):
         '''z_vectors here is not needed but lefted as a dummy to be consistent with the AE that requires
         z_vectors'''
-
+        if self.rescale_rate:
+            rate = rate*8/10 #interpolation in spatial domain will be between [0, 0.8] this due to intense blurness found in the generated images
         with torch.set_grad_enabled(False):
             generator_result = self.generator_model(x, phase, truth_masks, rate)
             generated_images, generated_masks, truth_masks = generator_result

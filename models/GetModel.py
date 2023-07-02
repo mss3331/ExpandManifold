@@ -66,8 +66,10 @@ def getModelFrameWork(model_name):
             model = ExpandMani_AE_AvgMaskGenSeg(Gen_Seg_arch)
         elif model_name.find('ExpandMani_SpatialInterpolate')>=0:
             model = ExpandMani_AE_SpatialInterpolate(Gen_Seg_arch)
-        elif model_name.find('ExpandMani_SpatInterTVstyle')>=0:
+        elif model_name.find('ExpandMani_SpatInterTVstyle_')>=0:
             model = ExpandMani_AE_SpatInterTVstyle(Gen_Seg_arch,aug=aug)
+        elif model_name.find('ExpandMani_SpatInterTVstyle80')>=0:
+            model = ExpandMani_AE_SpatInterTVstyle(Gen_Seg_arch,aug=aug, rescale_rate=True)
         elif model_name.find('ExpandMani_TVstyle')>=0:
             model = ExpandMani_AE_TVstyle(Gen_Seg_arch,aug=aug)
         else:
