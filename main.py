@@ -277,11 +277,12 @@ if __name__ == '__main__':
         # ExpandMani_SpatialInterpolate_TL_unetwithoutskip_lraspp
         ##############  TV style ###############################
         # ExpandMani_SpatInterTVstyle_TL_unetwithoutskip_lraspp, ExpandMani_SpatInterTVstyle80_TL_unetwithoutskip_lraspp
+        # ExpandMani_SpatInterTVstyle_hue_TL_unetwithoutskip_lraspp
         # ExpandMani_TVstyle_TL_unetwithoutskip_lraspp
         # ExpandMani_TVstyle_hue_TL_unetwithoutskip_lraspp
         ############# for my own interrest ##########################
         # ExpandMani_TL_AvgMaskGenSeg_lraspp
-    model_name = "ExpandMani_SpatInterTVstyle80_TL_unetwithoutskip_lraspp"
+    model_name = "ExpandMani_SpatInterTVstyle80_hue_TL_unetwithoutskip_lraspp"
     if model_name.find('VAE')>=0:
         learning_rate=0.0001
     model = getModelFrameWork(model_name)
@@ -298,7 +299,7 @@ if __name__ == '__main__':
     # CVC_ClinicDB_KvasirOrigTest, KvasirOrig_CVCEndoLaribTest, KvasirOrig_withoutTest
     # CVC_ClinicDB_KvasirOrigEndoLaribTest,
     # CVC_ClinicDB_sequenced_KvasirOrigEndoLaribTest,CVC_ClinicDB_sequenced_withoutTest)
-    experimentDatasets = 'KvasirOrig_CVCEndoLaribTest'
+    experimentDatasets = 'CVC_ClinicDB_KvasirOrigEndoLaribTest'
 
     # Start WandB recording
     initializWandb()

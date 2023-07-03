@@ -253,6 +253,22 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                     best_train_generator_loss = generator_loss
 
             if phase != 'train':
+                if phase=='val':
+                    #if Polyp mean is getting better
+                    if mean_metrics_polyp['jaccard'] > best_iou[phase]:
+                        wandb.run.summary["best_{}_iou".format(phase)] = np.mean(iou_batches)
+                        wandb.run.summary["best_{}_iou_epoch".format(phase)] = epoch
+                        best_iou[phase] = mean_metrics_polyp['jaccard'] #Jaccard/IOU of polyp
+                        best_loss[phase] = np.mean(loss_batches)
+                        best_iou_epoch = epoch
+                        print('best val_iou')
+                        if model_name not in generator_models:
+                            print('Saving a checkpoint')
+                            saving_checkpoint(epoch, model, optimizer,
+                                              best_loss['val'], -1, #test_loss
+                                              best_iou['val'],  -1, #test_mIOU
+                                              colab_dir, model_name)
+                            print('testing on a test set....\n')
                 if best_iou_epoch == epoch:  # calculate background metrics for val and test if it is the best epoch
                     metrics_dic_background = calculate_metrics_torch(all_true_maskes_torch, all_pred_maskes_torch,
                                                                      reduction='mean', cloned_detached=True,
@@ -272,22 +288,7 @@ def ExpandingManifold_training_loop(num_epochs, optimizer, lamda, model, loss_di
                     pandas.DataFrame.from_dict({'Polyp': metrics_dic_polyp, 'Background': metrics_dic_background,
                                                 'Mean': metrics_mMetrics_dic}).transpose().to_excel(file_name)
 
-                if phase=='val':
-                    #if Polyp mean is getting better
-                    if mean_metrics_polyp['jaccard'] > best_iou[phase]:
-                        wandb.run.summary["best_{}_iou".format(phase)] = np.mean(iou_batches)
-                        wandb.run.summary["best_{}_iou_epoch".format(phase)] = epoch
-                        best_iou[phase] = mean_metrics_polyp['jaccard'] #Jaccard/IOU of polyp
-                        best_loss[phase] = np.mean(loss_batches)
-                        best_iou_epoch = epoch
-                        print('best val_iou')
-                        if model_name not in generator_models:
-                            print('Saving a checkpoint')
-                            saving_checkpoint(epoch, model, optimizer,
-                                              best_loss['val'], -1, #test_loss
-                                              best_iou['val'],  -1, #test_mIOU
-                                              colab_dir, model_name)
-                            print('testing on a test set....\n')
+
 
 
             wandb.log({phase + "_loss": np.mean(loss_batches),
